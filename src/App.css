@@ -1,38 +1,220 @@
-.App {
-  text-align: center;
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: poppins;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Info Bar */
+.info {
+  background: #FCF2F3;
+  color: black;
+  font-size: 16px;
+  padding: 10px 70px;
+  z-index: 1000;
+  position: relative;
   display: flex;
-  flex-direction: column;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+/* Navbar OVER hero */
+nav.navbar {
+  position: absolute; /* This is crucial */
+  top: 50px; /* adjust depending on your info bar */
+  left: 0;
+  width: 100%;
+  height: 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 70px;
+ /* transparent white bg */
+  z-index: 1001; /* higher than .hero .overlay */
+}
+
+/* Logo image fix */
+.logo img {
+  height: 150px;
+  top: 10px;
+  
+}
+
+/* Menu */
+.menu a {
+  color: #ffffff;
+  text-decoration: none;
+  padding: 10px 20px;
+}
+.menu a:hover {
+  background: #e84393;
+  color: white;
+  border-radius: 6px;
+}
+
+/* Hero section */
+.hero {
+  position: relative;
+  height: 100vh;
+  background-image: url("images/Herosection.jpg") ;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
   color: white;
+  margin-top: 0; /* Make sure hero starts from the top */
 }
 
-.App-link {
-  color: #61dafb;
+/* Overlay for dim effect */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Hero text content */
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 1000px;
+  padding: 20px;
+}
+
+.hero-content h1 {
+  font-size: 48px;
+  font-weight: 700;
+}
+.hero-content h1 span {
+  color: red;
+}
+.hero-content p {
+  font-size: 18px;
+  margin: 10px 0 30px;
+}
+
+/* Search form */
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  border-radius: 10px;
+}
+.search-form select, .search-form button {
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 16px;
+}
+.search-form button {
+  background-color: #6a7686;
+  color: white;
+  cursor: pointer;
+}
+.search-form button:hover {
+  background-color: #4b5868;
+}
+
+/* Responsive text */
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 32px;
   }
-  to {
-    transform: rotate(360deg);
+  .search-form {
+    flex-direction: column;
   }
 }
+
+/* <login form> */
+
+ @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+    /* * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background:  #ffffff;
+    } */
+    .login1 {
+      max-width: 400px;
+      width: 100%;
+      background: #263238;
+      color: #fff;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    .login1 h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+      font-weight: 500;
+    }
+    .input-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    .input-group i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #4caf50;
+      font-size: 1.2rem;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 0.7rem 0.7rem 0.7rem 2.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      outline: none;
+    }
+    .extra {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .login1 button {
+      width: 100%;
+      padding: 0.6rem;
+      background: #4caf50;
+      color: #fff;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .login1 button:hover {
+      background: #388e3c;
+    }
+    .login1 a {
+      color: #a5d6a7;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .login1 p {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+  
