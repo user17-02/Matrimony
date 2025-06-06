@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/user17-02/Matrimony/static/css/main.57000c5d.css",
+    "main.js": "/user17-02/Matrimony/static/js/main.2c17e67b.js",
+    "static/js/453.465d5caa.chunk.js": "/user17-02/Matrimony/static/js/453.465d5caa.chunk.js",
+    "static/media/Herosection.jpg": "/user17-02/Matrimony/static/media/Herosection.508a20cd71f32b015958.jpg",
+    "static/media/Logo.png": "/user17-02/Matrimony/static/media/Logo.ca84ce2ec37cb5b91060.png",
+    "index.html": "/user17-02/Matrimony/index.html",
+    "main.57000c5d.css.map": "/user17-02/Matrimony/static/css/main.57000c5d.css.map",
+    "main.2c17e67b.js.map": "/user17-02/Matrimony/static/js/main.2c17e67b.js.map",
+    "453.465d5caa.chunk.js.map": "/user17-02/Matrimony/static/js/453.465d5caa.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.57000c5d.css",
+    "static/js/main.2c17e67b.js"
+  ]
+}
