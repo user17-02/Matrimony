@@ -2,6 +2,7 @@ import hero from './images/Herosection.jpg'
 import logo from './images/Logo.png'
 import Home from './Components/home'
 import Login from './Components/login'
+import Signup from './Components/signup'
 import {BrowserRouter as Router, Routes, Route, Link, Navigate} from 'react-router-dom'
 import './App.css';
 
@@ -31,6 +32,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />}/> 
            <Route path="/login" element={<Login />}/> 
+           <Route path="/signup" element={<Signup />} />
           </Routes>
         
     

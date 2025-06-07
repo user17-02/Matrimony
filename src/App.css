@@ -139,7 +139,7 @@ nav.navbar {
 /* <login form> */
 
  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
-    /* * {
+    /* /* * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -151,8 +151,15 @@ nav.navbar {
       align-items: center;
       min-height: 100vh;
       background:  #ffffff;
-    } */
-    .login1 {
+    }  */
+      .my-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #ffffff;
+}
+    .Login1 {
       max-width: 400px;
       width: 100%;
       background: #263238;
@@ -161,7 +168,7 @@ nav.navbar {
       padding: 2rem;
       box-shadow: 0 0 15px rgba(0,0,0,0.5);
     }
-    .login1 h2 {
+    .Login1 h2 {
       text-align: center;
       margin-bottom: 1.5rem;
       font-size: 2rem;
@@ -193,7 +200,7 @@ nav.navbar {
       align-items: center;
       margin-bottom: 1rem;
     }
-    .login1 button {
+    .Login1 button {
       width: 100%;
       padding: 0.6rem;
       background: #4caf50;
@@ -204,15 +211,15 @@ nav.navbar {
       cursor: pointer;
       transition: 0.3s;
     }
-    .login1 button:hover {
+    .Login1 button:hover {
       background: #388e3c;
     }
-    .login1 a {
+    .Login1 a {
       color: #a5d6a7;
       text-decoration: none;
       font-size: 0.9rem;
     }
-    .login1 p {
+    .Login1 p {
       text-align: center;
       margin-top: 1rem;
       font-size: 0.9rem;

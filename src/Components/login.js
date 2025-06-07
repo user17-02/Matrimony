@@ -9,30 +9,32 @@ function Login() {
         register,
         handleSubmit,
         reset,
-        formstate: {errors },
+        formState: {errors },
     } = useForm();
     
     const onSubmit = async (data) => {
         console.log(data);
     };
     return (
-        
+
+      
        
         <div>
-            <div class="login1">
+             <div class="my-page-wrapper">
+            <div class="Login1">
                 <h2>Login</h2>
                  <form onSubmit={handleSubmit(onSubmit)} noValidate>
                     <div class="input-group">
                         <i class="bx bx-user"></i>
                         <input type="text" placeholder="Enter your username or email" name="username" 
                         className={`form-control ${errors.email ? "is-invalid" : ""}`}
-                        // {...register("email",{
-                        //     required: "Email is required",
-                        //     pattern: {
-                        //         value: /\s+@\s+\.\s+/,
-                        //         message: "Invalid email",
-                        //     },
-                        //     })} 
+                        {...register("email",{
+                            required: "Email is required",
+                            pattern: {
+                                value: /\s+@\s+\.\s+/,
+                                message: "Invalid email",
+                            },
+                            })} 
                             />
                           <div className="invalid-feedback">{errors.email?.message}</div>  
                     </div>
@@ -40,14 +42,14 @@ function Login() {
                         <i class="bx bx-lock"></i>
                         <input type="password" placeholder="Enter your password" name="password" 
                         className={`form-control ${errors.password ? "is-invalid" : ""}`} 
-                        // {...register("password", {
-                        //     required: "password is required",
-                        // })}
+                        {...register("password", {
+                            required: "password is required",
+                        })}
                         />
                         <div className="invalid-feedback">{errors.password?.message}</div>
                     </div>
                     <div class="extra">
-                        {/* <a href="#">Forgot password?</a> */}
+                        <a href="#">Forgot password?</a>
                     </div>
                     <button type="submit">Login</button>
                     <div>If you don't have an account? <a href="" onClick={handleClick}>Register Now</a></div>
@@ -55,7 +57,7 @@ function Login() {
             </div>
 
 
-
+</div>
 
          </div>
 
