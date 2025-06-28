@@ -1,6 +1,7 @@
 import React from "react";
 import {useForm} from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import axios from "axios";
 function Signup() {
   const navigate = useNavigate();
   const handleClick = () => {
@@ -16,8 +17,22 @@ function Signup() {
   const password = watch("password");
 
   const onSubmit = async (data) =>{
-    console.log(data);
+
+    
+   const userData = {
+      name : data.name,
+      email:data.email,
+      password:data.password
+    }
+    try{
+      const response= await axios.post('http://localhost:5000/api/user/register',userData)
+    }
+    catch (error){
+      alert(error.response?.data?.message || 'Registration failed ');
+      console.error(error);
+    }
   };
+
     return(
       
         <div>
@@ -27,18 +42,28 @@ function Signup() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <div class="input-group">
         <i class="bx bx-user"></i>
-        <input type="text" name="username" placeholder="Enter your username" />
+        <input type="text" name="username" placeholder="Enter your username" 
+         className={`form-control ${errors.username ? "is-invalid" : ""}`}
+        {...register("username", {
+          required: "username is required",
+          pattern: {
+            value: /^[a-zA-Z0-9._]{3,20}$/,
+            message: "Username must be 3–20 characters. Letters, numbers only.",
+          },
+        })} 
+        />
+        <div className="invalid-feedback">{errors.username?.message}</div>
       </div>
       <div class="input-group">
         <i class="bx bx-envelope"></i>
         <input type="email" name="email" placeholder="Enter your email" 
-        className={`form-control ${errors.email? "is-inavlid" : ""}`}
-        {...register("email",{
+        className={`form-control ${errors.email ? "is-invalid" : ""}`}
+        {...register("email", {
           required: "Email is required",
           pattern: {
-            value: /\s+@\s+\.\s+/,
-            message:"Inavlid Email",
-          }
+            value: /\S+@\S+\.\S+/,
+            message: "Invalid Email",
+          },
         })} 
         />
         <div className="invalid-feedback">{errors.email?.message}</div>
@@ -46,7 +71,7 @@ function Signup() {
       <div class="input-group">
         <i class="bx bx-lock"></i>
         <input type="password" name="password" placeholder="Enter your password" 
-        className={`form-control ${errors.password ? "is-inavlid" : ""}`}
+        className={`form-control ${errors.password ? "is-invalid" : ""}`}
         {...register("password",{
           required: "password is required",
           minLength: {value: 6, message: "Min 6 characters"},
@@ -80,3 +105,4 @@ function Signup() {
     )
 }
 export default Signup;
+

@@ -1,5 +1,6 @@
 import {useForm} from "react-hook-form";
 import {useNavigate} from 'react-router-dom';
+import axios from "axios";
 function Login() {
     const navigate = useNavigate();
     const handleClick = () => {
@@ -13,8 +14,29 @@ function Login() {
     } = useForm();
     
     const onSubmit = async (data) => {
-        console.log(data);
-    };
+        try {
+      const response = await axios.post(
+        "http://localhost:5000/api/user/login",
+        {
+          email: data.email,
+          password: data.password,
+        },
+        
+    );
+
+    if(response.status === 200){
+        navigate("/profiles")
+    }
+}
+    catch (error) {
+      console.log(error);
+      alert(error.response.data.message);
+
+    }
+};
+
+
+
     return (
 
       
@@ -31,7 +53,7 @@ function Login() {
                         {...register("email",{
                             required: "Email is required",
                             pattern: {
-                                value: /\s+@\s+\.\s+/,
+                                value: /\S+@\S+\.\S+/,
                                 message: "Invalid email",
                             },
                             })} 

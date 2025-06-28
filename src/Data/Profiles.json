@@ -1,0 +1,28 @@
+[
+    {
+        "id": 1,
+        "name":"Emly",
+        "age": 29,
+        "Profession":"IT Profession",
+        "Degree" :"B.Sc Computer Science",
+        "height":"155cm",
+       "imageUrl": "/images/Sample.jpg",
+        "Location":"chennai",
+        "Religion":"Christian",
+        "Status":"Available",
+        "Profiletype":"Premium"
+    },
+    {
+        "id": 2,
+        "name":"Emy",
+        "age": 26,
+        "Profession":"IT Profession",
+        "Degree" :"B.Sc Computer Science",
+        "height":"158cm",
+        "imageUrl":"/images/Sample.jpg",
+        "Location":"New York",
+        "Religion":"Christian",
+        "Status":"Available",
+        "Profiletype":"Free"
+    }
+]
