@@ -6,14 +6,23 @@ import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 
+// ✅ Removed Redux imports
+// import { Provider } from 'react-redux';
+// import store from './redux/store';
+
+// ✅ Still using Socket Context
+import { SocketProvider } from './context/SocketContext';
+
+const user = JSON.parse(localStorage.getItem("user"));
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 root.render(
   <React.StrictMode>
-    <App />
+    <SocketProvider userId={user?._id}>
+      <App />
+    </SocketProvider>
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
