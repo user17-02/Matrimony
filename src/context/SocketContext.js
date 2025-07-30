@@ -1,4 +1,3 @@
-// src/context/SocketContext.js
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
@@ -14,25 +13,33 @@ export const SocketProvider = ({ children, userId }) => {
     const newSocket = io("http://localhost:5000");
     setSocket(newSocket);
 
+    // ✅ Only emit joinRoom AFTER connection established and userId exists
+    if (userId) {
+      newSocket.on("connect", () => {
+        console.log("✅ Connected to Socket.IO:", newSocket.id);
+        newSocket.emit("joinRoom", userId);
+      });
+    }
+
     return () => {
       newSocket.disconnect();
     };
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    if (socket && userId) {
-      socket.emit("joinRoom", userId);
+    if (!socket) return;
 
-      socket.on("newNotification", (data) => {
-        console.log("🔔 Notification received:", data);
-        setNotifications((prev) => [...prev, data]);
-      });
+    const handleNotification = (data) => {
+      console.log("🔔 Notification received:", data);
+      setNotifications((prev) => [...prev, data]);
+    };
 
-      return () => {
-        socket.off("newNotification");
-      };
-    }
-  }, [socket, userId]);
+    socket.on("newNotification", handleNotification);
+
+    return () => {
+      socket.off("newNotification", handleNotification);
+    };
+  }, [socket]);
 
   return (
     <SocketContext.Provider value={{ socket, notifications }}>
