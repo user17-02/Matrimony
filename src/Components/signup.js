@@ -20,12 +20,15 @@ function Signup() {
 
     
    const userData = {
-      name : data.name,
+      username : data.username,
       email:data.email,
       password:data.password
     }
     try{
       const response= await axios.post('http://localhost:5000/api/user/register',userData)
+       alert("Registration successful!");
+  reset(); // clear the form
+  navigate("/login");
     }
     catch (error){
       alert(error.response?.data?.message || 'Registration failed ');
@@ -48,7 +51,7 @@ function Signup() {
           required: "username is required",
           pattern: {
             value: /^[a-zA-Z0-9._]{3,20}$/,
-            message: "Username must be 3–20 characters. Letters, numbers only.",
+            message: "name must be 3–20 characters. Letters, numbers only.",
           },
         })} 
         />

@@ -1,92 +1,62 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Filters from "./Filters";
+import { useNavigate } from "react-router-dom";
 
-function Profilecard() {
-  const [ProfilesData, setProfiles] = useState([]);
-  const [filters, setFilters] = useState({
-    religion: "",
-    location: "",
-    status: ""
-  });
-
-  const handleFilterChange = (field, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const filteredProfiles = ProfilesData.filter((profile) => {
-    return (
-      (filters.religion === "" || profile.Religion === filters.religion) &&
-      (filters.location === "" || profile.Location.toLowerCase() === filters.location.toLowerCase()) &&
-      (filters.status === "" || profile.Status === filters.status)
-    );
-  });
+function Profile() {
+  const [user, setUser] = useState(null);
+  const userId = localStorage.getItem("userId");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("/Data/Profiles.json")
-      .then((response) => {
-        setProfiles(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching profile data:", error);
-      });
-  }, []);
+    if (!userId) {
+      navigate("/login"); // ✅ Redirect if not logged in
+      return;
+    }
+
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/user/${userId}`);
+        setUser(res.data);
+      } catch (err) {
+        console.error("Failed to load user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, [userId, navigate]);
+
+  if (!user) return <div>Loading profile...</div>;
 
   return (
-    <div className="container my-4">
-      <div className="row">
-        {/* Filters Column */}
-        <div className="col-md-4">
-          <Filters filters={filters} onFilterChange={handleFilterChange} />
-        </div>
+    <div className="container mt-4">
+      <h3>Your Profile</h3>
+      <div className="card p-3">
+        {user.image && (
+          <img
+            src={user.image}
+            alt="Profile"
+            style={{
+              width: "150px",
+              height: "150px",
+              objectFit: "cover",
+              borderRadius: "8px",
+              marginBottom: "15px",
+            }}
+          />
+        )}
+        <p><strong>Name:</strong> {user.name}</p>
+        <p><strong>Age:</strong> {user.age}</p>
+        <p><strong>City:</strong> {user.city}</p>
+        <p><strong>Height:</strong> {user.height}</p>
+        <p><strong>Job:</strong> {user.job}</p>
+        <p><strong>Account Type:</strong> {user.type}</p>
 
-        {/* Profiles Column */}
-        <div className="col-md-8">
-          <div className="row">
-            {filteredProfiles.map((profile, index) => (
-              <div className="col-12 mb-4" key={index}>
-                <div className="card p-3 h-100 shadow-sm">
-                  <div className="d-flex">
-                    <img
-                      src={profile.imageUrl}
-                      alt={profile.name}
-                      className="rounded"
-                      style={{
-                        width: "120px",
-                        height: "120px",
-                        objectFit: "cover"
-                      }}
-                    />
-                    <div className="ms-3">
-                      <h5>{profile.name}</h5>
-                      <div className="d-flex flex-wrap gap-2 mb-2">
-                        <span className="badge bg-secondary">Degree: {profile.Degree}</span>
-                        <span className="badge bg-secondary">Profession: {profile.Profession}</span>
-                        <span className="badge bg-secondary">Age: {profile.age}</span>
-                        <span className="badge bg-secondary">Height: {profile.height}</span>
-                      </div>
-                      <div>
-                        <button className="btn btn-success btn-sm me-2">Chat Now</button>
-                        <button className="btn btn-outline-primary btn-sm me-2">Whatsapp</button>
-                        <button className="btn btn-outline-secondary btn-sm me-2">Send Interest</button>
-                        <button className="btn btn-outline-dark btn-sm">More Details</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {filteredProfiles.length === 0 && (
-              <p className="text-muted">No profiles match your filters.</p>
-            )}
-          </div>
-        </div>
+        <button className="btn btn-primary mt-2" onClick={() => navigate("/Editprofile")}>
+          Edit Profile
+        </button>
       </div>
     </div>
   );
 }
 
-export default Profilecard;
+export default Profile;

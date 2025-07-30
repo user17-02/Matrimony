@@ -1,7 +1,7 @@
 import {useForm} from "react-hook-form";
 import {useNavigate} from 'react-router-dom';
 import axios from "axios";
-function Login() {
+function Login({ setUser }) {
     const navigate = useNavigate();
     const handleClick = () => {
         navigate ('/Signup');
@@ -18,14 +18,21 @@ function Login() {
       const response = await axios.post(
         "http://localhost:5000/api/user/login",
         {
-          email: data.email,
+          loginInput: data.loginInput,
           password: data.password,
         },
-        
+       
     );
 
     if(response.status === 200){
-        navigate("/profiles")
+        localStorage.setItem("userId",response.data.user._id);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        localStorage.setItem("token", response.data.token); 
+
+    //     const token = btoa(JSON.stringify(response.data.user));
+    // document.cookie = `token=${token}; path=/; max-age=3600`;
+    setUser(response.data.user);
+        navigate("/Editprofile")
     }
 }
     catch (error) {
@@ -35,12 +42,8 @@ function Login() {
     }
 };
 
-
-
     return (
 
-      
-       
         <div>
              <div class="my-page-wrapper">
             <div class="Login1">
@@ -48,17 +51,13 @@ function Login() {
                  <form onSubmit={handleSubmit(onSubmit)} noValidate>
                     <div class="input-group">
                         <i class="bx bx-user"></i>
-                        <input type="text" placeholder="Enter your username or email" name="username" 
-                        className={`form-control ${errors.email ? "is-invalid" : ""}`}
-                        {...register("email",{
-                            required: "Email is required",
-                            pattern: {
-                                value: /\S+@\S+\.\S+/,
-                                message: "Invalid email",
-                            },
+                        <input type="text" placeholder="Enter your username or email" name="loginInput" 
+                        className={`form-control ${errors.loginInput ? "is-invalid" : ""}`}
+                        {...register("loginInput",{
+                            required: "Email or username is required"
                             })} 
                             />
-                          <div className="invalid-feedback">{errors.email?.message}</div>  
+                          <div className="invalid-feedback">{errors.loginInput?.message}</div>  
                     </div>
                     <div class="input-group">
                         <i class="bx bx-lock"></i>
@@ -77,13 +76,8 @@ function Login() {
                     <div>If you don't have an account? <a href="" onClick={handleClick}>Register Now</a></div>
                 </form>
             </div>
-
-
 </div>
-
-         </div>
-
-
+     </div>
     );
 
 }

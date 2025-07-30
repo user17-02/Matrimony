@@ -1,41 +1,57 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import Girl from "../images/Girl.jpg";
+import { NavLink } from 'react-router-dom';
+import { useSocket } from "../context/SocketContext";
+ // 👈 import socket context
 
-function Sidebar() {
+
+const Sidebar = () => {
+  const { notifications } = useSocket(); // 👈 access live notifications
+
   return (
     <div className="sidebar">
-      <div className="profile-section">
-        <img src={Girl} alt="Profile" />
-        <h5>User Name</h5>
-        <p>Member</p>
-      </div>
-      <nav>
-        <ul>
-          <li>
-            <Link to="">
-              <i className="fas fa-home"></i> Dashboard
-            </Link>
-          </li>
-          <li>
-            <Link to="profile">
-              <i className="fas fa-user"></i> Profile
-            </Link>
-          </li>
-          <li>
-            <Link to="settings">
-              <i className="fas fa-cog"></i> Settings
-            </Link>
-          </li>
-          <li>
-            <Link to="/">
-              <i className="fas fa-sign-out-alt"></i> Log out
-            </Link>
-          </li>
-        </ul>
-      </nav>
+      <NavLink to="/dashboard" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        Dashboard
+      </NavLink>
+
+      <NavLink to="/dashboard/profile" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        My Profile
+      </NavLink>
+
+      <NavLink to="/dashboard/sent-requests" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        Sent Requests
+      </NavLink>
+
+      <NavLink to="/dashboard/received-requests" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        Received Requests
+      </NavLink>
+
+      <NavLink to="/dashboard/accepted-requests" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        Accepted Requests
+      </NavLink>
+
+      <NavLink to="/dashboard/denied-requests" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        Denied Requests
+      </NavLink>
+
+      <NavLink to="/dashboard/my-sent-requests" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        My Sent Requests
+      </NavLink>
+
+      <NavLink to="/dashboard/liked-me" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        Liked Me
+      </NavLink>
+
+      <NavLink to="/dashboard/liked-users" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        Users You Liked
+      </NavLink>
+
+      <NavLink to="/dashboard/notifications" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
+        Notifications
+        {notifications.length > 0 && (
+          <span className="notification-badge">{notifications.length}</span> // 👈 badge
+        )}
+      </NavLink>
     </div>
   );
-}
+};
 
 export default Sidebar;
