@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { useSocket } from "../context/SocketContext";
- // 👈 import socket context
+
 
 
 const Sidebar = () => {
-  const { notifications } = useSocket(); // 👈 access live notifications
+  const { notifications } = useSocket(); //  access live notifications
 
   return (
     <div className="sidebar">
@@ -44,10 +44,12 @@ const Sidebar = () => {
         Users You Liked
       </NavLink>
 
+      
+
       <NavLink to="/dashboard/notifications" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
         Notifications
         {notifications.length > 0 && (
-          <span className="notification-badge">{notifications.length}</span> // 👈 badge
+          <span className="notification-badge">{notifications.length}</span> // badge
         )}
       </NavLink>
     </div>
