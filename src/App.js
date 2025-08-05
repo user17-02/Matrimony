@@ -1,4 +1,3 @@
-// App.js
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './App.css';
 import hero from './images/Herosection.jpg';
@@ -27,6 +26,7 @@ import Likedme from './Components/Likedme';
 import Notifications from './Components/Notifications';
 import SocketInit from './context/SocketInit';
 import {SocketProvider} from './context/SocketContext';
+import MyProfile from './Components/MyProfile';
 
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -108,8 +108,6 @@ function App() {
               )}
             </div>
           </nav>
-
-          {/* Global Notification Component */}
       
 
           {/* Routes */}
@@ -123,11 +121,12 @@ function App() {
             <Route path="/profiles" element={<Requireauth><Allprofile /></Requireauth>} />
             <Route path="/profile/:id" element={<Requireauth><Singleprofile /></Requireauth>} />
             <Route path="/chat/:id" element={<Requireauth><ChatPage /></Requireauth>} />
+          
 
             {/* Dashboard with nested routes */}
             <Route path="/dashboard" element={<Requireauth><Dashboard /></Requireauth>}>
               <Route index element={<Overview />} />
-              <Route path="profile" element={<Editprofile />} />
+              <Route path="profile" element={<MyProfile />} />
               <Route path="sent-requests" element={<Sent />} />
               <Route path="received-requests" element={<Received />} />
               <Route path="accepted-requests" element={<Acceptedrequests />} />
@@ -136,6 +135,8 @@ function App() {
               <Route path="liked-users" element={<LikedUsers />} />
               <Route path="liked-me" element={<Likedme />} />
               <Route path="notifications" element={<Notifications />} />
+              
+
             </Route>
           </Routes>
         </div>

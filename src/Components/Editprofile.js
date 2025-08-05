@@ -1,80 +1,163 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+const normalizeEnum = (str) => {
+  if (!str || typeof str !== "string") return "";
+  const s = str.trim().toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+const parseRange = (raw) => {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw !== "string") return [];
+  return raw
+    .split(/[-,]/)
+    .map((p) => Number(p.trim()))
+    .filter((n) => !isNaN(n));
+};
 
 const EditProfile = () => {
+  const userId = localStorage.getItem("userId");
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    age: '',
-    dateOfBirth: '',
-    gender: '',
-    phone: '',
-    religion: '',
-    caste: '',
-    motherTongue: '',
-    nationality: '',
-    height: '',
-    weight: '',
-    complexion: '',
-    bodyType: '',
-    maritalStatus: 'Never Married',
+    name: "",
+    email: "",
+    age: "",
+    city: "",
+    state: "",
+    country: "",
+    height: "",
+    weight: "",
+    profession: "",
+    qualification: "",
+    company: "",
+    income: "",
+    educationDetails: "",
+    gender: "",
+    complexion: "",
+    bodyType: "",
+    religion: "",
+    caste: "",
+    motherTongue: "",
+    maritalStatus: "",
     isDivorced: false,
-    qualification: '',
-    profession: '',
-    company: '',
-    income: '',
-    educationDetails: '',
-    address: '',
-    city: '',
-    state: '',
-    country: '',
-    diet: '',
-    smoking: '',
-    drinking: '',
-    hobbies: '',
-    interests: '',
-    aboutMe: '',
+    diet: "",
+    smoking: "",
+    drinking: "",
+    hobbies: "",
+    interests: "",
+    aboutMe: "",
+    type: "",
+    image: "",
     partnerPreferences: {
-      ageRange: '',
-      heightRange: '',
-      maritalStatus: '',
-      religion: '',
-      caste: '',
-      education: '',
-      profession: '',
-      location: ''
+      ageRange: "",
+      heightRange: "",
+      complexion: "",
+      profession: "",
+      religion: "",
+      caste: "",
+      location: ""
     }
   });
+  const [previewImage, setPreviewImage] = useState(null);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [errors, setErrors] = useState({});
-  const userId = localStorage.getItem('userId');
+  const genderOptions = ["Male", "Female", "Other"];
+  const complexionOptions = ["Fair", "Wheatish", "Dark"];
+  const bodyTypeOptions = ["Slim", "Average", "Athletic", "Heavy"];
+  const dietOptions = ["Vegetarian", "Non-Vegetarian", "Eggetarian", "Vegan"];
+  const yesNoOccasional = ["Yes", "No", "Occasionally"];
+  const maritalOptions = ["Never Married", "Divorced", "Widowed", "Separated"];
+
+  const loadUser = async () => {
+    if (!userId) {
+      setMessage("User not logged in.");
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await axios.get(`http://localhost:5000/api/user/${userId}`, {
+        headers: { "Cache-Control": "no-cache" }
+      });
+      const u = res.data;
+
+      setFormData((prev) => ({
+        ...prev,
+        name: u.name || "",
+        email: u.email || "",
+        age: u.age || "",
+        city: u.city || "",
+        state: u.state || "",
+        country: u.country || "India",
+        height: u.height || "",
+        weight: u.weight || "",
+        profession: u.profession || "",
+        qualification: u.qualification || "",
+        company: u.company || "",
+        income: u.income || "",
+        educationDetails: u.educationDetails || "",
+        gender: u.gender || "",
+        complexion: u.complexion || "",
+        bodyType: u.bodyType || "",
+        religion: u.religion || "",
+        caste: u.caste || "",
+        motherTongue: u.motherTongue || "",
+        maritalStatus: u.maritalStatus || "",
+        isDivorced: u.isDivorced || false,
+        diet: u.diet || "",
+        smoking: u.smoking || "",
+        drinking: u.drinking || "",
+        hobbies: Array.isArray(u.hobbies) ? u.hobbies.join(", ") : (u.hobbies || ""),
+        interests: Array.isArray(u.interests) ? u.interests.join(", ") : (u.interests || ""),
+        aboutMe: u.aboutMe || "",
+        type: u.type || "",
+        image: u.image || "",
+        partnerPreferences: {
+          ageRange: Array.isArray(u.partnerPreferences?.ageRange)
+            ? u.partnerPreferences.partnerPreferences?.ageRange?.join("-")
+            : u.partnerPreferences?.ageRange || "",
+          heightRange: Array.isArray(u.partnerPreferences?.heightRange)
+            ? u.partnerPreferences.heightRange.join("-")
+            : u.partnerPreferences?.heightRange || "",
+          complexion: u.partnerPreferences?.complexion || "",
+          profession: u.partnerPreferences?.profession || "",
+          religion: u.partnerPreferences?.religion || "",
+          caste: u.partnerPreferences?.caste || "",
+          location: u.partnerPreferences?.location || ""
+        }
+      }));
+      setPreviewImage(u.image || null);
+    } catch (err) {
+      console.error("Error fetching user:", err);
+      setMessage("Failed to load user data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/user/${userId}`);
-        const user = res.data;
-
-        setFormData((prev) => ({
-          ...prev,
-          username: user.username || '',
-          email: user.email || '',
-          // You can extend this to load other fields as needed
-        }));
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadUser();
+    // eslint-disable-next-line
   }, [userId]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type: inputType, checked, files } = e.target;
 
-    if (name.startsWith('partnerPreferences.')) {
-      const key = name.split('.')[1];
+    if (name === "image" && files && files[0]) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, image: reader.result }));
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(files[0]);
+      return;
+    }
+
+    if (name.startsWith("partnerPreferences.")) {
+      const key = name.split(".")[1];
       setFormData((prev) => ({
         ...prev,
         partnerPreferences: {
@@ -82,245 +165,414 @@ const EditProfile = () => {
           [key]: value
         }
       }));
+      return;
+    }
+
+    if (inputType === "checkbox") {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value
-      }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    for (const key in formData) {
-      if (key === 'username' || key === 'email' || key === 'partnerPreferences') continue;
-      if (typeof formData[key] === 'boolean') continue; // Skip boolean fields
-      if (!formData[key] || (typeof formData[key] === 'string' && formData[key].trim() === '')) {
-        newErrors[key] = 'This field is required';
-      }
-    }
-
-    for (const key in formData.partnerPreferences) {
-      if (
-        !formData.partnerPreferences[key] ||
-        formData.partnerPreferences[key].trim() === ''
-      ) {
-        newErrors['partnerPreferences.' + key] = 'This field is required';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) {
-      alert('Please fill in all required fields.');
+    if (!userId) {
+      setMessage("Missing user ID.");
       return;
     }
-    try {
-      const updatedData = {
-        ...formData,
-        hobbies: formData.hobbies.split(',').map((h) => h.trim()),
-        interests: formData.interests.split(',').map((i) => i.trim())
-      };
-      await axios.put(`http://localhost:5000/api/user/${userId}`, updatedData);
-      alert('Profile updated!');
-    } catch (err) {
-      console.error(err);
-      alert('Error updating profile');
-    }
-  };
 
-  const renderError = (field) => {
-    if (errors[field]) {
-      return <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors[field]}</div>;
+    const payload = {
+      name: formData.name,
+      age: formData.age,
+      city: formData.city,
+      state: formData.state,
+      country: formData.country,
+      height: formData.height,
+      weight: formData.weight,
+      profession: formData.profession,
+      qualification: formData.qualification,
+      company: formData.company,
+      income: formData.income,
+      educationDetails: formData.educationDetails,
+      gender: normalizeEnum(formData.gender),
+      complexion: normalizeEnum(formData.complexion),
+      bodyType: formData.bodyType,
+      religion: formData.religion,
+      caste: formData.caste,
+      motherTongue: formData.motherTongue,
+      maritalStatus: formData.maritalStatus,
+      isDivorced: formData.isDivorced,
+      diet: formData.diet,
+      smoking: formData.smoking,
+      drinking: formData.drinking,
+      hobbies: formData.hobbies
+        .split(",")
+        .map((h) => h.trim())
+        .filter(Boolean),
+      interests: formData.interests
+        .split(",")
+        .map((i) => i.trim())
+        .filter(Boolean),
+      aboutMe: formData.aboutMe,
+      type: formData.type,
+      image: formData.image,
+      partnerPreferences: {
+        ageRange: parseRange(formData.partnerPreferences.ageRange),
+        heightRange: parseRange(formData.partnerPreferences.heightRange),
+        complexion: normalizeEnum(formData.partnerPreferences.complexion),
+        profession: formData.partnerPreferences.profession,
+        religion: formData.partnerPreferences.religion,
+        caste: formData.partnerPreferences.caste,
+        location: formData.partnerPreferences.location
+      }
+    };
+
+    console.log("Submitting update payload:", payload);
+    try {
+      setLoading(true);
+      const res = await axios.put(
+        `http://localhost:5000/api/user/${userId}`,
+        payload
+      );
+      console.log("Update response:", res.data);
+      setMessage("✅ Profile updated successfully!");
+      // Refresh from backend to ensure sync
+      setTimeout(() => {
+        navigate("/dashboard/profile?t=" + Date.now());
+      }, 500);
+    } catch (err) {
+      console.error("Update error:", err);
+      const errMsg = err?.response?.data?.message || "Update failed";
+      setMessage(`❌ ${errMsg}`);
+    } finally {
+      setLoading(false);
     }
-    return null;
   };
 
   return (
-    <div className="edit-profile">
+    <div className="container mt-4" style={{ maxWidth: 900 }}>
       <h2>Edit Profile</h2>
-      <form onSubmit={handleSubmit} noValidate>
-        <label>Username</label>
-        <input type="text" name="username" value={formData.username || ''} readOnly />
 
-        <label>Email</label>
-        <input type="email" name="email" value={formData.email || ''} readOnly />
+      {message && (
+        <div
+          style={{
+            padding: "10px",
+            marginBottom: 12,
+            borderRadius: 4,
+            background: message.startsWith("✅") ? "#d1e7dd" : "#f8d7da",
+            color: message.startsWith("✅") ? "#0f5132" : "#842029"
+          }}
+        >
+          {message}
+        </div>
+      )}
 
-        <label>Age *</label>
-        <input type="number" name="age" value={formData.age || ''} onChange={handleChange} required />
-        {renderError('age')}
+      {loading && <div style={{ marginBottom: 8 }}>Loading...</div>}
 
-        <label>Gender *</label>
-        <select name="gender" value={formData.gender || ''} onChange={handleChange} required>
-          <option value="">Select</option>
-          <option>Male</option>
-          <option>Female</option>
-          <option>Other</option>
-        </select>
-        {renderError('gender')}
+      <form onSubmit={handleSubmit} className="card p-4" noValidate>
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label">Name</label>
+              <input name="name" value={formData.name} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Phone *</label>
-        <input type="text" name="phone" value={formData.phone || ''} onChange={handleChange} required />
-        {renderError('phone')}
+            <div className="mb-3">
+              <label className="form-label">Email (read-only)</label>
+              <input name="email" value={formData.email} readOnly className="form-control bg-light" />
+            </div>
 
-        <label>Religion *</label>
-        <input type="text" name="religion" value={formData.religion || ''} onChange={handleChange} required />
-        {renderError('religion')}
+            <div className="mb-3">
+              <label className="form-label">Age</label>
+              <input
+                type="number"
+                name="age"
+                value={formData.age}
+                min={18}
+                max={100}
+                onChange={handleChange}
+                className="form-control"
+              />
+            </div>
 
-        <label>Caste *</label>
-        <input type="text" name="caste" value={formData.caste || ''} onChange={handleChange} required />
-        {renderError('caste')}
+            <div className="mb-3">
+              <label className="form-label">City</label>
+              <input name="city" value={formData.city} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Mother Tongue *</label>
-        <input type="text" name="motherTongue" value={formData.motherTongue || ''} onChange={handleChange} required />
-        {renderError('motherTongue')}
+            <div className="mb-3">
+              <label className="form-label">State</label>
+              <input name="state" value={formData.state} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Nationality *</label>
-        <input type="text" name="nationality" value={formData.nationality || ''} onChange={handleChange} required />
-        {renderError('nationality')}
+            <div className="mb-3">
+              <label className="form-label">Country</label>
+              <input name="country" value={formData.country} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Height (cm) *</label>
-        <input type="number" name="height" value={formData.height || ''} onChange={handleChange} required />
-        {renderError('height')}
+            <div className="mb-3">
+              <label className="form-label">Height (cm)</label>
+              <input type="number" name="height" value={formData.height} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Weight (kg) *</label>
-        <input type="number" name="weight" value={formData.weight || ''} onChange={handleChange} required />
-        {renderError('weight')}
+            <div className="mb-3">
+              <label className="form-label">Weight</label>
+              <input type="number" name="weight" value={formData.weight} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Complexion *</label>
-        <select name="complexion" value={formData.complexion || ''} onChange={handleChange} required>
-          <option value="">Select</option>
-          <option>Fair</option>
-          <option>Wheatish</option>
-          <option>Dark</option>
-        </select>
-        {renderError('complexion')}
+            <div className="mb-3">
+              <label className="form-label">Profession</label>
+              <input name="profession" value={formData.profession} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Body Type *</label>
-        <select name="bodyType" value={formData.bodyType || ''} onChange={handleChange} required>
-          <option value="">Select</option>
-          <option>Slim</option>
-          <option>Average</option>
-          <option>Athletic</option>
-          <option>Heavy</option>
-        </select>
-        {renderError('bodyType')}
+            <div className="mb-3">
+              <label className="form-label">Qualification</label>
+              <input name="qualification" value={formData.qualification} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Qualification *</label>
-        <input type="text" name="qualification" value={formData.qualification || ''} onChange={handleChange} required />
-        {renderError('qualification')}
+            <div className="mb-3">
+              <label className="form-label">Company</label>
+              <input name="company" value={formData.company} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Profession *</label>
-        <input type="text" name="profession" value={formData.profession || ''} onChange={handleChange} required />
-        {renderError('profession')}
+            <div className="mb-3">
+              <label className="form-label">Income</label>
+              <input name="income" value={formData.income} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Company *</label>
-        <input type="text" name="company" value={formData.company || ''} onChange={handleChange} required />
-        {renderError('company')}
+            <div className="mb-3">
+              <label className="form-label">Education Details</label>
+              <input name="educationDetails" value={formData.educationDetails} onChange={handleChange} className="form-control" />
+            </div>
+          </div>
 
-        <label>Income *</label>
-        <input type="text" name="income" value={formData.income || ''} onChange={handleChange} required />
-        {renderError('income')}
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label">Gender</label>
+              <select name="gender" value={formData.gender} onChange={handleChange} className="form-control">
+                <option value="">Select Gender</option>
+                {genderOptions.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
 
-        <label>Education Details *</label>
-        <input type="text" name="educationDetails" value={formData.educationDetails || ''} onChange={handleChange} required />
-        {renderError('educationDetails')}
+            <div className="mb-3">
+              <label className="form-label">Complexion</label>
+              <select name="complexion" value={formData.complexion} onChange={handleChange} className="form-control">
+                <option value="">Select Complexion</option>
+                {complexionOptions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
 
-        <label>Address *</label>
-        <input type="text" name="address" value={formData.address || ''} onChange={handleChange} required />
-        {renderError('address')}
+            <div className="mb-3">
+              <label className="form-label">Body Type</label>
+              <select name="bodyType" value={formData.bodyType} onChange={handleChange} className="form-control">
+                <option value="">Select Body Type</option>
+                {bodyTypeOptions.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
 
-        <label>City *</label>
-        <input type="text" name="city" value={formData.city || ''} onChange={handleChange} required />
-        {renderError('city')}
+            <div className="mb-3">
+              <label className="form-label">Religion</label>
+              <input name="religion" value={formData.religion} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>State *</label>
-        <input type="text" name="state" value={formData.state || ''} onChange={handleChange} required />
-        {renderError('state')}
+            <div className="mb-3">
+              <label className="form-label">Caste</label>
+              <input name="caste" value={formData.caste} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Country *</label>
-        <input type="text" name="country" value={formData.country || ''} onChange={handleChange} required />
-        {renderError('country')}
+            <div className="mb-3">
+              <label className="form-label">Mother Tongue</label>
+              <input name="motherTongue" value={formData.motherTongue} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Diet *</label>
-        <select name="diet" value={formData.diet || ''} onChange={handleChange} required>
-          <option value="">Select</option>
-          <option>Vegetarian</option>
-          <option>Non-Vegetarian</option>
-          <option>Eggetarian</option>
-          <option>Vegan</option>
-        </select>
-        {renderError('diet')}
+            <div className="mb-3">
+              <label className="form-label">Marital Status</label>
+              <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} className="form-control">
+                <option value="">Select</option>
+                {maritalOptions.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
 
-        <label>Smoking *</label>
-        <select name="smoking" value={formData.smoking || ''} onChange={handleChange} required>
-          <option value="">Select</option>
-          <option>Yes</option>
-          <option>No</option>
-          <option>Occasionally</option>
-        </select>
-        {renderError('smoking')}
+            <div className="mb-3 form-check">
+              <input type="checkbox" name="isDivorced" checked={formData.isDivorced} onChange={handleChange} className="form-check-input" id="isDivorced" />
+              <label className="form-check-label" htmlFor="isDivorced">Is Divorced</label>
+            </div>
 
-        <label>Drinking *</label>
-        <select name="drinking" value={formData.drinking || ''} onChange={handleChange} required>
-          <option value="">Select</option>
-          <option>Yes</option>
-          <option>No</option>
-          <option>Occasionally</option>
-        </select>
-        {renderError('drinking')}
+            <div className="mb-3">
+              <label className="form-label">Diet</label>
+              <select name="diet" value={formData.diet} onChange={handleChange} className="form-control">
+                <option value="">Select Diet</option>
+                {dietOptions.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
 
-        <label>Hobbies (comma separated) *</label>
-        <input type="text" name="hobbies" value={formData.hobbies || ''} onChange={handleChange} required />
-        {renderError('hobbies')}
+            <div className="mb-3">
+              <label className="form-label">Smoking</label>
+              <select name="smoking" value={formData.smoking} onChange={handleChange} className="form-control">
+                <option value="">Select</option>
+                {yesNoOccasional.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
 
-        <label>Interests (comma separated) *</label>
-        <input type="text" name="interests" value={formData.interests || ''} onChange={handleChange} required />
-        {renderError('interests')}
+            <div className="mb-3">
+              <label className="form-label">Drinking</label>
+              <select name="drinking" value={formData.drinking} onChange={handleChange} className="form-control">
+                <option value="">Select</option>
+                {yesNoOccasional.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
 
-        <label>About Me *</label>
-        <textarea name="aboutMe" value={formData.aboutMe || ''} onChange={handleChange} required />
-        {renderError('aboutMe')}
+            <div className="mb-3">
+              <label className="form-label">Hobbies</label>
+              <input name="hobbies" value={formData.hobbies} onChange={handleChange} className="form-control" placeholder="reading, music" />
+            </div>
 
-        <h3>Partner Preferences *</h3>
+            <div className="mb-3">
+              <label className="form-label">Interests</label>
+              <input name="interests" value={formData.interests} onChange={handleChange} className="form-control" placeholder="sports, travel" />
+            </div>
 
-        <label>Preferred Age Range</label>
-        <input type="text" name="partnerPreferences.ageRange" value={formData.partnerPreferences.ageRange || ''} onChange={handleChange} required />
-        {renderError('partnerPreferences.ageRange')}
+            <div className="mb-3">
+              <label className="form-label">About Me</label>
+              <textarea name="aboutMe" value={formData.aboutMe} onChange={handleChange} className="form-control" rows={3} />
+            </div>
 
-        <label>Preferred Height Range</label>
-        <input type="text" name="partnerPreferences.heightRange" value={formData.partnerPreferences.heightRange || ''} onChange={handleChange} required />
-        {renderError('partnerPreferences.heightRange')}
+            <div className="mb-3">
+              <label className="form-label">Type</label>
+              <input name="type" value={formData.type} onChange={handleChange} className="form-control" />
+            </div>
 
-        <label>Preferred Marital Status</label>
-        <input type="text" name="partnerPreferences.maritalStatus" value={formData.partnerPreferences.maritalStatus || ''} onChange={handleChange} required />
-        {renderError('partnerPreferences.maritalStatus')}
+            <div className="mb-3">
+              <label className="form-label">Profile Image</label>
+              <input type="file" name="image" accept="image/*" onChange={handleChange} className="form-control" />
+              {previewImage && (
+                <div style={{ marginTop: 8 }}>
+                  <img
+                    src={previewImage}
+                    alt="preview"
+                    style={{
+                      width: 120,
+                      height: 120,
+                      objectFit: "cover",
+                      borderRadius: 8,
+                      border: "1px solid #ccc"
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-        <label>Preferred Religion</label>
-        <input type="text" name="partnerPreferences.religion" value={formData.partnerPreferences.religion || ''} onChange={handleChange} required />
-        {renderError('partnerPreferences.religion')}
+        <hr />
 
-        <label>Preferred Caste</label>
-        <input type="text" name="partnerPreferences.caste" value={formData.partnerPreferences.caste || ''} onChange={handleChange} required />
-        {renderError('partnerPreferences.caste')}
+        <h5>Partner Preferences</h5>
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label">Preferred Age Range</label>
+              <input
+                type="text"
+                name="partnerPreferences.ageRange"
+                value={formData.partnerPreferences.ageRange}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="e.g. 25-35"
+              />
+            </div>
 
-        <label>Preferred Education</label>
-        <input type="text" name="partnerPreferences.education" value={formData.partnerPreferences.education || ''} onChange={handleChange} required />
-        {renderError('partnerPreferences.education')}
+            <div className="mb-3">
+              <label className="form-label">Preferred Height Range</label>
+              <input
+                type="text"
+                name="partnerPreferences.heightRange"
+                value={formData.partnerPreferences.heightRange}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="e.g. 160-180"
+              />
+            </div>
 
-        <label>Preferred Profession</label>
-        <input type="text" name="partnerPreferences.profession" value={formData.partnerPreferences.profession || ''} onChange={handleChange} required />
-        {renderError('partnerPreferences.profession')}
+            <div className="mb-3">
+              <label className="form-label">Preferred Complexion</label>
+              <input
+                type="text"
+                name="partnerPreferences.complexion"
+                value={formData.partnerPreferences.complexion}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="Fair/Wheatish/Dark"
+              />
+            </div>
+          </div>
 
-        <label>Preferred Location</label>
-        <input type="text" name="partnerPreferences.location" value={formData.partnerPreferences.location || ''} onChange={handleChange} required />
-        {renderError('partnerPreferences.location')}
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label">Preferred Profession</label>
+              <input
+                type="text"
+                name="partnerPreferences.profession"
+                value={formData.partnerPreferences.profession}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="e.g. Engineer"
+              />
+            </div>
 
-        <button type="submit">Update Profile</button>
+            <div className="mb-3">
+              <label className="form-label">Preferred Religion</label>
+              <input
+                type="text"
+                name="partnerPreferences.religion"
+                value={formData.partnerPreferences.religion}
+                onChange={handleChange}
+                className="form-control"
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Preferred Caste</label>
+              <input
+                type="text"
+                name="partnerPreferences.caste"
+                value={formData.partnerPreferences.caste}
+                onChange={handleChange}
+                className="form-control"
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Preferred Location</label>
+              <input
+                type="text"
+                name="partnerPreferences.location"
+                value={formData.partnerPreferences.location}
+                onChange={handleChange}
+                className="form-control"
+              />
+            </div>
+          </div>
+        </div>
+
+        <button disabled={loading} type="submit" className="btn btn-primary">
+          {loading ? "Saving..." : "Save Changes"}
+        </button>
       </form>
     </div>
   );

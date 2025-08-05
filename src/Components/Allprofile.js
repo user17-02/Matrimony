@@ -19,32 +19,32 @@ function AllProfiles() {
       }
 
       try {
-        // ✅ 1. Fetch all users except current
+        // 1. Fetch all users except current
         const resUsers = await axios.get(
-          `http://localhost:5000/api/user/all/${currentUserId}`
+          `http://localhost:5000/api/user/all/${currentUserId}`,
+          { headers: { "Cache-Control": "no-cache" } }
         );
 
-        const filteredUsers = resUsers.data.filter(user =>
-          user.name && user.age && user.city && user.image
+        const filteredUsers = resUsers.data.filter(
+          (user) => user.name && user.age && user.city && user.image
         );
-
         setUsers(filteredUsers);
 
-        // ✅ 2. Fetch all interests related to me
+        // 2. Fetch all interests related to me
         const resInterests = await axios.get("http://localhost:5000/api/requests");
         const mine = resInterests.data.filter(
-          r =>
+          (r) =>
             r.interestFrom === currentUserId || r.interestTo === currentUserId
         );
         setInterests(mine);
 
-        // ✅ 3. Fetch liked users
+        // 3. Fetch liked users
         const resLikeIds = await axios.get(
           `http://localhost:5000/api/likes/ids/${currentUserId}`
         );
         const likedIds = resLikeIds.data.likedIds || [];
         const map = {};
-        likedIds.forEach(id => {
+        likedIds.forEach((id) => {
           map[id] = true;
         });
         setLikedMap(map);
@@ -56,16 +56,16 @@ function AllProfiles() {
     fetchData();
   }, [currentUserId]);
 
-  const handleSendInterest = async receiverId => {
+  const handleSendInterest = async (receiverId) => {
     try {
       await axios.post("http://localhost:5000/api/requests", {
         interestFrom: currentUserId,
-        interestTo: receiverId
+        interestTo: receiverId,
       });
 
       const res = await axios.get("http://localhost:5000/api/requests");
       const mine = res.data.filter(
-        r =>
+        (r) =>
           r.interestFrom === currentUserId || r.interestTo === currentUserId
       );
       setInterests(mine);
@@ -76,25 +76,25 @@ function AllProfiles() {
     }
   };
 
-  const getInterestStatus = userId => {
+  const getInterestStatus = (userId) => {
     const entry = interests.find(
-      r =>
+      (r) =>
         (r.interestFrom === currentUserId && r.interestTo === userId) ||
         (r.interestTo === currentUserId && r.interestFrom === userId)
     );
     return entry?.status || null;
   };
 
-  const handleLikeToggle = async profileId => {
+  const handleLikeToggle = async (profileId) => {
     try {
       const res = await axios.post("http://localhost:5000/api/likes/toggle", {
         likedFrom: currentUserId,
-        likedTo: profileId
+        likedTo: profileId,
       });
 
-      setLikedMap(prev => ({
+      setLikedMap((prev) => ({
         ...prev,
-        [profileId]: res.data.liked
+        [profileId]: res.data.liked,
       }));
     } catch (err) {
       console.error("Like error:", err);
@@ -109,7 +109,7 @@ function AllProfiles() {
         {users.length === 0 ? (
           <p>No profiles found.</p>
         ) : (
-          users.map(user => {
+          users.map((user) => {
             const status = getInterestStatus(user._id);
             const isLiked = likedMap[user._id];
 
@@ -125,7 +125,7 @@ function AllProfiles() {
                         height: "400px",
                         objectFit: "cover",
                         borderRadius: "8px",
-                        display: "block"
+                        display: "block",
                       }}
                     />
                   )}
@@ -142,11 +142,21 @@ function AllProfiles() {
                       )}
                     </div>
                   </div>
-                  <p><strong>Age:</strong> {user.age}</p>
-                  <p><strong>City:</strong> {user.city}</p>
-                  <p><strong>Height:</strong> {user.height}</p>
-                  <p><strong>Job:</strong> {user.job}</p>
-                  <p><strong>Type:</strong> {user.type}</p>
+                  <p>
+                    <strong>Age:</strong> {user.age}
+                  </p>
+                  <p>
+                    <strong>City:</strong> {user.city}
+                  </p>
+                  <p>
+                    <strong>Height:</strong> {user.height}
+                  </p>
+                  <p>
+                    <strong>Profession:</strong> {user.profession}
+                  </p>
+                  <p>
+                    <strong>Type:</strong> {user.type}
+                  </p>
 
                   {status && (
                     <p style={{ color: "green", fontWeight: "bold" }}>
