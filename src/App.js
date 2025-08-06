@@ -27,6 +27,8 @@ import Notifications from './Components/Notifications';
 import SocketInit from './context/SocketInit';
 import {SocketProvider} from './context/SocketContext';
 import MyProfile from './Components/MyProfile';
+import ChangePassword from './Components/ChangePassword';
+import ViewDetails from './Components/ViewDetails';
 
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -66,10 +68,9 @@ function App() {
 
   return (
     <SocketProvider userId={user?._id}>
-      <SocketInit userId={user?._id} />
-
       <Router>
         <div>
+          <SocketInit userId={user?._id} />
           {/* Info Bar */}
           <div className="info">
             <span><i className="fa fa-phone"></i> 9865678990</span>
@@ -121,7 +122,8 @@ function App() {
             <Route path="/profiles" element={<Requireauth><Allprofile /></Requireauth>} />
             <Route path="/profile/:id" element={<Requireauth><Singleprofile /></Requireauth>} />
             <Route path="/chat/:id" element={<Requireauth><ChatPage /></Requireauth>} />
-          
+            <Route path="/changepassword" element={<ChangePassword />} />
+            <Route path="/view/:id" element={<ViewDetails />} />       
 
             {/* Dashboard with nested routes */}
             <Route path="/dashboard" element={<Requireauth><Dashboard /></Requireauth>}>
@@ -135,7 +137,6 @@ function App() {
               <Route path="liked-users" element={<LikedUsers />} />
               <Route path="liked-me" element={<Likedme />} />
               <Route path="notifications" element={<Notifications />} />
-              
 
             </Route>
           </Routes>

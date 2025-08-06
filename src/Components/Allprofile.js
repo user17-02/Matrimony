@@ -7,54 +7,63 @@ function AllProfiles() {
   const [users, setUsers] = useState([]);
   const [interests, setInterests] = useState([]);
   const [likedMap, setLikedMap] = useState({});
-  const navigate = useNavigate();
+  const [filters, setFilters] = useState({
+    ageMin: '',
+    ageMax: '',
+    heightMin: '',
+    heightMax: '',
+    city: '',
+    religion: '',
+    caste: '',
+    maritalStatus: '',
+    job: '',
+    education: ''
+  });
 
+  const navigate = useNavigate();
   const currentUserId = localStorage.getItem("userId");
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!currentUserId) {
-        console.error("User ID not found in localStorage.");
-        return;
-      }
-
-      try {
-        // 1. Fetch all users except current
-        const resUsers = await axios.get(
-          `http://localhost:5000/api/user/all/${currentUserId}`,
-          { headers: { "Cache-Control": "no-cache" } }
-        );
-
-        const filteredUsers = resUsers.data.filter(
-          (user) => user.name && user.age && user.city && user.image
-        );
-        setUsers(filteredUsers);
-
-        // 2. Fetch all interests related to me
-        const resInterests = await axios.get("http://localhost:5000/api/requests");
-        const mine = resInterests.data.filter(
-          (r) =>
-            r.interestFrom === currentUserId || r.interestTo === currentUserId
-        );
-        setInterests(mine);
-
-        // 3. Fetch liked users
-        const resLikeIds = await axios.get(
-          `http://localhost:5000/api/likes/ids/${currentUserId}`
-        );
-        const likedIds = resLikeIds.data.likedIds || [];
-        const map = {};
-        likedIds.forEach((id) => {
-          map[id] = true;
-        });
-        setLikedMap(map);
-      } catch (err) {
-        console.error("Fetch error:", err);
-      }
-    };
-
     fetchData();
   }, [currentUserId]);
+
+  const fetchData = async () => {
+    if (!currentUserId) {
+      console.error("User ID not found in localStorage.");
+      return;
+    }
+
+    try {
+      const resUsers = await axios.get(
+        `http://localhost:5000/api/user/all/${currentUserId}`,
+        { headers: { "Cache-Control": "no-cache" } }
+      );
+
+      const filteredUsers = resUsers.data.filter(
+        (user) => user.name && user.age && user.city && user.image
+      );
+      setUsers(filteredUsers);
+
+      const resInterests = await axios.get("http://localhost:5000/api/requests");
+      const mine = resInterests.data.filter(
+        (r) =>
+          r.interestFrom === currentUserId || r.interestTo === currentUserId
+      );
+      setInterests(mine);
+
+      const resLikeIds = await axios.get(
+        `http://localhost:5000/api/likes/ids/${currentUserId}`
+      );
+      const likedIds = resLikeIds.data.likedIds || [];
+      const map = {};
+      likedIds.forEach((id) => {
+        map[id] = true;
+      });
+      setLikedMap(map);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
+  };
 
   const handleSendInterest = async (receiverId) => {
     try {
@@ -101,9 +110,59 @@ function AllProfiles() {
     }
   };
 
+  const handleFilterChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
+
+  const applyFilters = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post("http://localhost:5000/api/user/filter", filters);
+      setUsers(res.data);
+    } catch (err) {
+      console.error("Filter error:", err);
+    }
+  };
+
   return (
     <div className="container mt-4">
       <h3 className="mb-4">All Registered Profiles</h3>
+
+      <form className="row mb-4" onSubmit={applyFilters}>
+        <div className="col">
+          <input name="ageMin" placeholder="Min Age" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <input name="ageMax" placeholder="Max Age" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <input name="heightMin" placeholder="Min Height" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <input name="heightMax" placeholder="Max Height" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <input name="city" placeholder="City" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <input name="religion" placeholder="Religion" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <input name="caste" placeholder="Caste" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <input name="maritalStatus" placeholder="Marital Status" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <input name="job" placeholder="Profession" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <input name="education" placeholder="Education" onChange={handleFilterChange} className="form-control" />
+        </div>
+        <div className="col">
+          <button type="submit" className="btn btn-primary w-100">Apply Filters</button>
+        </div>
+      </form>
 
       <div className="row">
         {users.length === 0 ? (
@@ -142,21 +201,11 @@ function AllProfiles() {
                       )}
                     </div>
                   </div>
-                  <p>
-                    <strong>Age:</strong> {user.age}
-                  </p>
-                  <p>
-                    <strong>City:</strong> {user.city}
-                  </p>
-                  <p>
-                    <strong>Height:</strong> {user.height}
-                  </p>
-                  <p>
-                    <strong>Profession:</strong> {user.profession}
-                  </p>
-                  <p>
-                    <strong>Type:</strong> {user.type}
-                  </p>
+                  <p><strong>Age:</strong> {user.age}</p>
+                  <p><strong>City:</strong> {user.city}</p>
+                  <p><strong>Height:</strong> {user.height}</p>
+                  <p><strong>Profession:</strong> {user.profession}</p>
+                  <p><strong>Type:</strong> {user.type}</p>
 
                   {status && (
                     <p style={{ color: "green", fontWeight: "bold" }}>
@@ -166,7 +215,7 @@ function AllProfiles() {
 
                   <button
                     className="btn btn-info mt-2 me-2"
-                    onClick={() => navigate(`/profile/${user._id}`)}
+                    onClick={() => navigate(`/view/${user._id}`)}
                   >
                     View Details
                   </button>
