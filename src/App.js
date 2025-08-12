@@ -29,6 +29,7 @@ import {SocketProvider} from './context/SocketContext';
 import MyProfile from './Components/MyProfile';
 import ChangePassword from './Components/ChangePassword';
 import ViewDetails from './Components/ViewDetails';
+import ProtectedRoute from "./Components/ProtectedRoute";
 
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -123,7 +124,8 @@ function App() {
             <Route path="/profile/:id" element={<Requireauth><Singleprofile /></Requireauth>} />
             <Route path="/chat/:id" element={<Requireauth><ChatPage /></Requireauth>} />
             <Route path="/changepassword" element={<ChangePassword />} />
-            <Route path="/view/:id" element={<ViewDetails />} />       
+            <Route path="/view/:id" element={<ViewDetails />} />     
+              
 
             {/* Dashboard with nested routes */}
             <Route path="/dashboard" element={<Requireauth><Dashboard /></Requireauth>}>

@@ -5,65 +5,85 @@ import { FaHeart, FaRegHeart } from "react-icons/fa";
 
 function AllProfiles() {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [interests, setInterests] = useState([]);
   const [likedMap, setLikedMap] = useState({});
   const [filters, setFilters] = useState({
-    ageMin: '',
-    ageMax: '',
-    heightMin: '',
-    heightMax: '',
-    city: '',
-    religion: '',
-    caste: '',
-    maritalStatus: '',
-    job: '',
-    education: ''
+    age: "",
+    city: "",
+    height: "",
+    profession: "",
   });
 
   const navigate = useNavigate();
   const currentUserId = localStorage.getItem("userId");
 
   useEffect(() => {
+    const fetchData = async () => {
+      console.log("Current User ID from localStorage:", currentUserId);
+      if (!currentUserId) {
+        console.error("User ID not found in localStorage.");
+        return;
+      }
+
+      try {
+        // Fetch all users (excluding current user in backend logic)
+        const resUsers = await axios.get(
+          `http://localhost:5000/api/user/all/${currentUserId}`
+        );
+        console.log("Fetched Users from API:", resUsers.data);
+
+        // Show all users as returned from API (no filtering)
+        setUsers(resUsers.data);
+        setFilteredUsers(resUsers.data);
+
+        // Fetch interests
+        const resInterests = await axios.get("http://localhost:5000/api/requests");
+        const mine = resInterests.data.filter(
+          (r) =>
+            r.interestFrom === currentUserId || r.interestTo === currentUserId
+        );
+        console.log("Fetched Interests:", mine);
+        setInterests(mine);
+
+        // Fetch liked profiles
+        const resLikeIds = await axios.get(
+          `http://localhost:5000/api/likes/ids/${currentUserId}`
+        );
+        console.log("Fetched Likes:", resLikeIds.data);
+        const likedIds = resLikeIds.data.likedIds || [];
+        const map = {};
+        likedIds.forEach((id) => {
+          map[id] = true;
+        });
+        setLikedMap(map);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    };
+
     fetchData();
   }, [currentUserId]);
 
-  const fetchData = async () => {
-    if (!currentUserId) {
-      console.error("User ID not found in localStorage.");
-      return;
+  // Apply filters
+  useEffect(() => {
+    let filtered = users;
+
+    if (filters.age) {
+      filtered = filtered.filter(user => user.age === parseInt(filters.age));
+    }
+    if (filters.city) {
+      filtered = filtered.filter(user => user.city?.toLowerCase().includes(filters.city.toLowerCase()));
+    }
+    if (filters.height) {
+      filtered = filtered.filter(user => user.height === parseInt(filters.height));
+    }
+    if (filters.profession) {
+      filtered = filtered.filter(user => user.profession?.toLowerCase().includes(filters.profession.toLowerCase()));
     }
 
-    try {
-      const resUsers = await axios.get(
-        `http://localhost:5000/api/user/all/${currentUserId}`,
-        { headers: { "Cache-Control": "no-cache" } }
-      );
-
-      const filteredUsers = resUsers.data.filter(
-        (user) => user.name && user.age && user.city && user.image
-      );
-      setUsers(filteredUsers);
-
-      const resInterests = await axios.get("http://localhost:5000/api/requests");
-      const mine = resInterests.data.filter(
-        (r) =>
-          r.interestFrom === currentUserId || r.interestTo === currentUserId
-      );
-      setInterests(mine);
-
-      const resLikeIds = await axios.get(
-        `http://localhost:5000/api/likes/ids/${currentUserId}`
-      );
-      const likedIds = resLikeIds.data.likedIds || [];
-      const map = {};
-      likedIds.forEach((id) => {
-        map[id] = true;
-      });
-      setLikedMap(map);
-    } catch (err) {
-      console.error("Fetch error:", err);
-    }
-  };
+    setFilteredUsers(filtered);
+  }, [filters, users]);
 
   const handleSendInterest = async (receiverId) => {
     try {
@@ -111,64 +131,69 @@ function AllProfiles() {
   };
 
   const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
-  };
-
-  const applyFilters = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post("http://localhost:5000/api/user/filter", filters);
-      setUsers(res.data);
-    } catch (err) {
-      console.error("Filter error:", err);
-    }
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   return (
     <div className="container mt-4">
       <h3 className="mb-4">All Registered Profiles</h3>
 
-      <form className="row mb-4" onSubmit={applyFilters}>
-        <div className="col">
-          <input name="ageMin" placeholder="Min Age" onChange={handleFilterChange} className="form-control" />
+      {/* Filter UI */}
+      <div className="card p-3 mb-4">
+        <div className="row">
+          <div className="col-md-2">
+            <input
+              type="number"
+              name="age"
+              className="form-control"
+              placeholder="Age"
+              value={filters.age}
+              onChange={handleFilterChange}
+            />
+          </div>
+          <div className="col-md-2">
+            <input
+              type="text"
+              name="city"
+              className="form-control"
+              placeholder="City"
+              value={filters.city}
+              onChange={handleFilterChange}
+            />
+          </div>
+          <div className="col-md-2">
+            <input
+              type="number"
+              name="height"
+              className="form-control"
+              placeholder="Height"
+              value={filters.height}
+              onChange={handleFilterChange}
+            />
+          </div>
+          <div className="col-md-3">
+            <input
+              type="text"
+              name="profession"
+              className="form-control"
+              placeholder="Profession"
+              value={filters.profession}
+              onChange={handleFilterChange}
+            />
+          </div>
         </div>
-        <div className="col">
-          <input name="ageMax" placeholder="Max Age" onChange={handleFilterChange} className="form-control" />
-        </div>
-        <div className="col">
-          <input name="heightMin" placeholder="Min Height" onChange={handleFilterChange} className="form-control" />
-        </div>
-        <div className="col">
-          <input name="heightMax" placeholder="Max Height" onChange={handleFilterChange} className="form-control" />
-        </div>
-        <div className="col">
-          <input name="city" placeholder="City" onChange={handleFilterChange} className="form-control" />
-        </div>
-        <div className="col">
-          <input name="religion" placeholder="Religion" onChange={handleFilterChange} className="form-control" />
-        </div>
-        <div className="col">
-          <input name="caste" placeholder="Caste" onChange={handleFilterChange} className="form-control" />
-        </div>
-        <div className="col">
-          <input name="maritalStatus" placeholder="Marital Status" onChange={handleFilterChange} className="form-control" />
-        </div>
-        <div className="col">
-          <input name="job" placeholder="Profession" onChange={handleFilterChange} className="form-control" />
-        </div>
-        <div className="col">
-          <input name="education" placeholder="Education" onChange={handleFilterChange} className="form-control" />
-        </div>
-        <div className="col">
-          <button type="submit" className="btn btn-primary w-100">Apply Filters</button>
-        </div>
-      </form>
+      </div>
 
+      {/* Profiles */}
       <div className="row">
-        {users.length === 0 ? (
+        {filteredUsers.length === 0 ? (
           <p>No profiles found.</p>
         ) : (
-          users.map((user) => {
+          filteredUsers.map((user) => {
             const status = getInterestStatus(user._id);
             const isLiked = likedMap[user._id];
 
@@ -201,11 +226,18 @@ function AllProfiles() {
                       )}
                     </div>
                   </div>
-                  <p><strong>Age:</strong> {user.age}</p>
-                  <p><strong>City:</strong> {user.city}</p>
-                  <p><strong>Height:</strong> {user.height}</p>
-                  <p><strong>Profession:</strong> {user.profession}</p>
-                  <p><strong>Type:</strong> {user.type}</p>
+                  <p>
+                    <strong>Age:</strong> {user.age}
+                  </p>
+                  <p>
+                    <strong>City:</strong> {user.city}
+                  </p>
+                  <p>
+                    <strong>Height:</strong> {user.height}
+                  </p>
+                  <p>
+                    <strong>Profession:</strong> {user.profession}
+                  </p>
 
                   {status && (
                     <p style={{ color: "green", fontWeight: "bold" }}>
