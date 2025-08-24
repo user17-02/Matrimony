@@ -10,7 +10,6 @@ import Profilecard from './Components/Profilecard';
 import Editprofile from './Components/Editprofile';
 import Dashboard from './Components/Dashboard';
 import Interest from './Components/Interest';
-import AddRequest from './Components/Addrequest';
 import Allprofile from './Components/Allprofile';
 import Requireauth from './Components/Requireauth';
 import MyRequests from './Components/MyRequests';
@@ -88,7 +87,7 @@ function App() {
               <Link to="/profiles">Profiles</Link>
               <Link to="/Service">Service</Link>
               <Link to="/dashboard">Dashboard</Link>
-              <Link to="/add-request">Add Request</Link>
+              
               {user ? (
                 <>
                   <span style={{ marginLeft: "10px" }}>{user.username}</span>
@@ -118,7 +117,6 @@ function App() {
             <Route path="/login" element={<Login setUser={setUser} />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/Service" element={<Interest />} />
-            <Route path="/add-request" element={<AddRequest />} />
             <Route path="/editprofile" element={<Requireauth><Editprofile /></Requireauth>} />
             <Route path="/profiles" element={<Requireauth><Allprofile /></Requireauth>} />
             <Route path="/profile/:id" element={<Requireauth><Singleprofile /></Requireauth>} />
@@ -135,7 +133,6 @@ function App() {
               <Route path="received-requests" element={<Received />} />
               <Route path="accepted-requests" element={<Acceptedrequests />} />
               <Route path="denied-requests" element={<DeniedRequests />} />
-              <Route path="my-sent-requests" element={<MyRequests />} />
               <Route path="liked-users" element={<LikedUsers />} />
               <Route path="liked-me" element={<Likedme />} />
               <Route path="notifications" element={<Notifications />} />

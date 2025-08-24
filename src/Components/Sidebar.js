@@ -32,10 +32,6 @@ const Sidebar = () => {
         Denied Requests
       </NavLink>
 
-      <NavLink to="/dashboard/my-sent-requests" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
-        My Sent Requests
-      </NavLink>
-
       <NavLink to="/dashboard/liked-me" className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}>
         Liked Me
       </NavLink>

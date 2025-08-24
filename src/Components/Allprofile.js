@@ -20,20 +20,19 @@ function AllProfiles() {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log("Current User ID from localStorage:", currentUserId);
-      if (!currentUserId) {
-        console.error("User ID not found in localStorage.");
-        return;
-      }
+      if (!currentUserId) return;
 
       try {
-        // Fetch all users (excluding current user in backend logic)
-        const resUsers = await axios.get(
-          `http://localhost:5000/api/user/all/${currentUserId}`
-        );
-        console.log("Fetched Users from API:", resUsers.data);
+        // Fetch current user first to check gender
+        const resCurrentUser = await axios.get(`http://localhost:5000/api/user/${currentUserId}`);
+        const currentUser = resCurrentUser.data;
 
-        // Show all users as returned from API (no filtering)
+        if (!currentUser.gender) {
+          alert("Please update your gender in profile for better matching!");
+        }
+
+        // Fetch all other profiles (backend now filters by opposite gender automatically)
+        const resUsers = await axios.get(`http://localhost:5000/api/user/all/${currentUserId}`);
         setUsers(resUsers.data);
         setFilteredUsers(resUsers.data);
 
@@ -41,21 +40,18 @@ function AllProfiles() {
         const resInterests = await axios.get("http://localhost:5000/api/requests");
         const mine = resInterests.data.filter(
           (r) =>
-            r.interestFrom === currentUserId || r.interestTo === currentUserId
+            r.interestFrom?._id === currentUserId ||
+            r.interestTo?._id === currentUserId ||
+            r.interestFrom === currentUserId ||
+            r.interestTo === currentUserId
         );
-        console.log("Fetched Interests:", mine);
         setInterests(mine);
 
         // Fetch liked profiles
-        const resLikeIds = await axios.get(
-          `http://localhost:5000/api/likes/ids/${currentUserId}`
-        );
-        console.log("Fetched Likes:", resLikeIds.data);
+        const resLikeIds = await axios.get(`http://localhost:5000/api/likes/ids/${currentUserId}`);
         const likedIds = resLikeIds.data.likedIds || [];
         const map = {};
-        likedIds.forEach((id) => {
-          map[id] = true;
-        });
+        likedIds.forEach((id) => (map[id] = true));
         setLikedMap(map);
       } catch (err) {
         console.error("Fetch error:", err);
@@ -65,41 +61,26 @@ function AllProfiles() {
     fetchData();
   }, [currentUserId]);
 
-  // Apply filters
   useEffect(() => {
     let filtered = users;
-
-    if (filters.age) {
-      filtered = filtered.filter(user => user.age === parseInt(filters.age));
-    }
-    if (filters.city) {
-      filtered = filtered.filter(user => user.city?.toLowerCase().includes(filters.city.toLowerCase()));
-    }
-    if (filters.height) {
-      filtered = filtered.filter(user => user.height === parseInt(filters.height));
-    }
-    if (filters.profession) {
-      filtered = filtered.filter(user => user.profession?.toLowerCase().includes(filters.profession.toLowerCase()));
-    }
-
+    if (filters.age) filtered = filtered.filter((u) => u.age === parseInt(filters.age));
+    if (filters.city)
+      filtered = filtered.filter((u) => u.city?.toLowerCase().includes(filters.city.toLowerCase()));
+    if (filters.height) filtered = filtered.filter((u) => u.height === parseInt(filters.height));
+    if (filters.profession)
+      filtered = filtered.filter((u) =>
+        u.profession?.toLowerCase().includes(filters.profession.toLowerCase())
+      );
     setFilteredUsers(filtered);
   }, [filters, users]);
 
   const handleSendInterest = async (receiverId) => {
     try {
-      await axios.post("http://localhost:5000/api/requests", {
+      const res = await axios.post("http://localhost:5000/api/requests", {
         interestFrom: currentUserId,
         interestTo: receiverId,
       });
-
-      const res = await axios.get("http://localhost:5000/api/requests");
-      const mine = res.data.filter(
-        (r) =>
-          r.interestFrom === currentUserId || r.interestTo === currentUserId
-      );
-      setInterests(mine);
-
-      alert("Interest sent!");
+      setInterests((prev) => [...prev, res.data]); // update instantly
     } catch (err) {
       console.error("Interest error:", err);
     }
@@ -108,6 +89,10 @@ function AllProfiles() {
   const getInterestStatus = (userId) => {
     const entry = interests.find(
       (r) =>
+        (r.interestFrom?._id?.toString() === currentUserId &&
+          r.interestTo?._id?.toString() === userId) ||
+        (r.interestTo?._id?.toString() === currentUserId &&
+          r.interestFrom?._id?.toString() === userId) ||
         (r.interestFrom === currentUserId && r.interestTo === userId) ||
         (r.interestTo === currentUserId && r.interestFrom === userId)
     );
@@ -120,11 +105,7 @@ function AllProfiles() {
         likedFrom: currentUserId,
         likedTo: profileId,
       });
-
-      setLikedMap((prev) => ({
-        ...prev,
-        [profileId]: res.data.liked,
-      }));
+      setLikedMap((prev) => ({ ...prev, [profileId]: res.data.liked }));
     } catch (err) {
       console.error("Like error:", err);
     }
@@ -132,17 +113,14 @@ function AllProfiles() {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
     <div className="container mt-4">
       <h3 className="mb-4">All Registered Profiles</h3>
 
-      {/* Filter UI */}
+      {/* Filters */}
       <div className="card p-3 mb-4">
         <div className="row">
           <div className="col-md-2">
@@ -209,21 +187,13 @@ function AllProfiles() {
                         height: "400px",
                         objectFit: "cover",
                         borderRadius: "8px",
-                        display: "block",
                       }}
                     />
                   )}
                   <div className="d-flex justify-content-between align-items-center mt-2">
                     <h5 className="mb-0">{user.name}</h5>
-                    <div
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleLikeToggle(user._id)}
-                    >
-                      {isLiked ? (
-                        <FaHeart color="red" size={22} />
-                      ) : (
-                        <FaRegHeart color="gray" size={22} />
-                      )}
+                    <div style={{ cursor: "pointer" }} onClick={() => handleLikeToggle(user._id)}>
+                      {isLiked ? <FaHeart color="red" size={22} /> : <FaRegHeart color="gray" size={22} />}
                     </div>
                   </div>
                   <p>
@@ -240,9 +210,7 @@ function AllProfiles() {
                   </p>
 
                   {status && (
-                    <p style={{ color: "green", fontWeight: "bold" }}>
-                      Status: {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </p>
+                    <p style={{ color: "green", fontWeight: "bold" }}>Status: {status}</p>
                   )}
 
                   <button
@@ -253,22 +221,30 @@ function AllProfiles() {
                   </button>
 
                   <button
-                    className="btn btn-outline-primary mt-2 me-2"
+                    className={`btn mt-2 me-2 ${
+                      status === "accepted"
+                        ? "btn-success"
+                        : status === "denied"
+                        ? "btn-danger"
+                        : status === "pending"
+                        ? "btn-secondary"
+                        : "btn-outline-primary"
+                    }`}
                     onClick={() => handleSendInterest(user._id)}
-                    disabled={!!status}
+                    disabled={status !== null}
                   >
-                    {status
-                      ? "Interest " +
-                        status.charAt(0).toUpperCase() +
-                        status.slice(1)
+                    {status === "pending"
+                      ? "Interest Sent"
+                      : status === "accepted"
+                      ? "Interest Accepted"
+                      : status === "denied"
+                      ? "Interest Denied"
                       : "Send Interest"}
                   </button>
 
                   {status === "accepted" && (
                     <Link to={`/chat/${user._id}`}>
-                      <button className="btn btn-success mt-2 w-100">
-                        Chat Now
-                      </button>
+                      <button className="btn btn-success mt-2 w-100">Chat Now</button>
                     </Link>
                   )}
                 </div>

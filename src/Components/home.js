@@ -7,6 +7,8 @@ import Marriage from '../images/Marriage.png'
 import Social from '../images/Social.png'
 import share from '../images/share.png'
 import Lovebirds from '../images/Lovebirds.png'
+import Couple1 from '../images/Couple1.jpg'
+import Couple2 from '../images/Couple2.jpg'
 
 
 
@@ -55,14 +57,14 @@ function Home() {
 </div>
 <div className="card " style={{
   width: "18rem" ,}}>
-  <img src={review} className="card-img-top" alt="..." />
+  <img src={Couple1} className="card-img-top" alt="..." />
   <div className="card-body">
     <p className="card-text">“Thanks to this platform, we connected over shared values and interests. Our families were impressed too. The detailed profile options helped us find a true match—not just on paper but in real life.”</p>
   </div>
 </div>
 <div className="card " style={{
   width: "18rem" ,}}>
-  <img src={review} className="card-img-top" alt="..." />
+  <img src={Couple2} className="card-img-top" alt="..." />
   <div className="card-body">
     <p className="card-text"> “After months of searching elsewhere, we found each other here. The verification and filtering options saved time and stress. We’re now happily married and recommend it to everyone serious about commitment.”</p>
   </div>

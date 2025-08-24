@@ -3,23 +3,13 @@ import axios from "axios";
 
 const Denied = () => {
   const [deniedList, setDeniedList] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
-  const userId = localStorage.getItem("userId");
+  const userId = localStorage.getItem("userId"); // logged-in user
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usersRes, requestsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/user"),
-          axios.get("http://localhost:5000/api/requests"),
-        ]);
-
-        setAllUsers(usersRes.data);
-
-        const denied = requestsRes.data.filter(
-          (r) => r.interestFrom === userId && r.status === "denied"
-        );
-        setDeniedList(denied);
+        const res = await axios.get(`http://localhost:5000/api/requests/denied/${userId}`);
+        setDeniedList(res.data);
       } catch (error) {
         console.error("Error fetching denied interests:", error);
       }
@@ -27,8 +17,6 @@ const Denied = () => {
 
     fetchData();
   }, [userId]);
-
-  const getUser = (id) => allUsers.find((u) => u._id === id);
 
   return (
     <div className="container mt-4">
@@ -38,7 +26,8 @@ const Denied = () => {
       ) : (
         <div className="row">
           {deniedList.map((req) => {
-            const user = getUser(req.interestTo);
+            const user = req.user; // ✅ comes from backend
+
             if (!user) return null;
 
             return (
@@ -59,9 +48,15 @@ const Denied = () => {
                   <p><strong>Name:</strong> {user.name}</p>
                   <p><strong>City:</strong> {user.city}</p>
                   <p><strong>Status:</strong> Denied ❌</p>
-                  <p style={{ fontWeight: "bold", color: "red" }}>
-                    Your interest was denied by this profile.
-                  </p>
+                  {req.deniedBy === "me" ? (
+                    <p style={{ fontWeight: "bold", color: "red" }}>
+                      You denied this request.
+                    </p>
+                  ) : (
+                    <p style={{ fontWeight: "bold", color: "red" }}>
+                      Your request was denied by this user.
+                    </p>
+                  )}
                 </div>
               </div>
             );

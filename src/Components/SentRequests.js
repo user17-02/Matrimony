@@ -3,42 +3,34 @@ import axios from "axios";
 
 const Sent = () => {
   const [sentList, setSentList] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
   const userId = localStorage.getItem("userId");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usersRes, requestsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/user"),
-          axios.get("http://localhost:5000/api/requests"),
-        ]);
-
-        setAllUsers(usersRes.data);
-
-        const sent = requestsRes.data.filter(
-          (r) => r.interestFrom === userId
-        );
-        setSentList(sent);
+        // ✅ Directly fetch sent requests for logged-in user
+        const res = await axios.get(`http://localhost:5000/api/requests/sent/${userId}`);
+        setSentList(res.data);
       } catch (error) {
         console.error("Error fetching sent interests:", error);
       }
     };
 
-    fetchData();
+    if (userId) {
+      fetchData();
+    }
   }, [userId]);
-
-  const getUser = (id) => allUsers.find((u) => u._id === id);
 
   return (
     <div className="container mt-4">
       <h3>My Sent Requests</h3>
+
       {sentList.length === 0 ? (
         <p>No requests sent yet.</p>
       ) : (
         <div className="row">
           {sentList.map((req) => {
-            const user = getUser(req.interestTo);
+            const user = req.interestTo; // ✅ already populated by backend
             if (!user) return null;
 
             return (
