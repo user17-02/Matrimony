@@ -3,14 +3,19 @@ import axios from "axios";
 
 const LikedUsers = () => {
   const [likedUsers, setLikedUsers] = useState([]);
-  const [refresh, setRefresh] = useState(false); // 👈 trigger to reload
-  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const [refresh, setRefresh] = useState(false); // trigger to reload
+  const token = localStorage.getItem("token");
+
+  const currentUserId = JSON.parse(localStorage.getItem("user"))._id;
 
   useEffect(() => {
     const fetchLikedUsers = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/likes/sent/${currentUser._id}`
+          `http://localhost:5000/api/likes/sent/${currentUserId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         setLikedUsers(res.data);
       } catch (err) {
@@ -19,17 +24,14 @@ const LikedUsers = () => {
     };
 
     fetchLikedUsers();
-  }, [refresh]); // 👈 runs every time refresh changes
+  }, [refresh, currentUserId, token]);
 
   const handleUnlike = async (userId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/likes/unlike`, {
-        data: {
-          interestFrom: currentUser._id,
-          interestTo: userId,
-        },
+      await axios.delete(`http://localhost:5000/api/likes/unlike/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setRefresh((prev) => !prev); // 👈 trigger re-fetch
+      setRefresh((prev) => !prev); // trigger re-fetch
     } catch (err) {
       console.error("Failed to unlike user", err);
     }

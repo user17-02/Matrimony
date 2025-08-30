@@ -2,28 +2,24 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const normalizeEnum = (str) => {
-  if (!str || typeof str !== "string") return "";
-  const s = str.trim().toLowerCase();
-  return s.charAt(0).toUpperCase() + s.slice(1);
-};
+const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
 const parseRange = (raw) => {
   if (Array.isArray(raw)) return raw;
   if (typeof raw !== "string") return [];
-  return raw
-    .split(/[-,]/)
-    .map((p) => Number(p.trim()))
-    .filter((n) => !isNaN(n));
+  return raw.split(/[-,]/).map(n => Number(n.trim())).filter(n => !isNaN(n));
 };
 
 const EditProfile = () => {
-  const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
+  const storedUser = localStorage.getItem("user");
+  const token = localStorage.getItem("token");
+  const storedUserParsed = storedUser ? JSON.parse(storedUser) : null;
+  const userId = storedUserParsed?._id;
 
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: storedUserParsed?.email || "",
     age: "",
     city: "",
     state: "",
@@ -42,14 +38,12 @@ const EditProfile = () => {
     caste: "",
     motherTongue: "",
     maritalStatus: "",
-    isDivorced: false,
     diet: "",
     smoking: "",
     drinking: "",
     hobbies: "",
     interests: "",
     aboutMe: "",
-    type: "",
     image: "",
     partnerPreferences: {
       ageRange: "",
@@ -61,77 +55,41 @@ const EditProfile = () => {
       location: ""
     }
   });
+
   const [previewImage, setPreviewImage] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const genderOptions = ["Male", "Female", "Other"];
-  const complexionOptions = ["Fair", "Wheatish", "Dark"];
-  const bodyTypeOptions = ["Slim", "Average", "Athletic", "Heavy"];
-  const dietOptions = ["Vegetarian", "Non-Vegetarian", "Eggetarian", "Vegan"];
-  const yesNoOccasional = ["Yes", "No", "Occasionally"];
-  const maritalOptions = ["Never Married", "Divorced", "Widowed", "Separated"];
-
+  // Load user data
   const loadUser = async () => {
-    if (!userId) {
+    if (!userId || !token) {
       setMessage("User not logged in.");
       return;
     }
     try {
       setLoading(true);
       const res = await axios.get(`http://localhost:5000/api/user/${userId}`, {
-        headers: { "Cache-Control": "no-cache" }
+        headers: { Authorization: `Bearer ${token}` }
       });
       const u = res.data;
-
-      setFormData((prev) => ({
-        ...prev,
-        name: u.name || "",
-        email: u.email || "",
-        age: u.age || "",
-        city: u.city || "",
-        state: u.state || "",
-        country: u.country || "India",
-        height: u.height || "",
-        weight: u.weight || "",
-        profession: u.profession || "",
-        qualification: u.qualification || "",
-        company: u.company || "",
-        income: u.income || "",
-        educationDetails: u.educationDetails || "",
-        gender: u.gender || "",
-        complexion: u.complexion || "",
-        bodyType: u.bodyType || "",
-        religion: u.religion || "",
-        caste: u.caste || "",
-        motherTongue: u.motherTongue || "",
-        maritalStatus: u.maritalStatus || "",
-        isDivorced: u.isDivorced || false,
-        diet: u.diet || "",
-        smoking: u.smoking || "",
-        drinking: u.drinking || "",
-        hobbies: Array.isArray(u.hobbies) ? u.hobbies.join(", ") : (u.hobbies || ""),
-        interests: Array.isArray(u.interests) ? u.interests.join(", ") : (u.interests || ""),
-        aboutMe: u.aboutMe || "",
-        type: u.type || "",
-        image: u.image || "",
+      setFormData({
+        ...formData,
+        ...u,
+        hobbies: Array.isArray(u.hobbies) ? u.hobbies.join(", ") : u.hobbies || "",
+        interests: Array.isArray(u.interests) ? u.interests.join(", ") : u.interests || "",
         partnerPreferences: {
-          ageRange: Array.isArray(u.partnerPreferences?.ageRange)
-            ? u.partnerPreferences.partnerPreferences?.ageRange?.join("-")
-            : u.partnerPreferences?.ageRange || "",
-          heightRange: Array.isArray(u.partnerPreferences?.heightRange)
-            ? u.partnerPreferences.heightRange.join("-")
-            : u.partnerPreferences?.heightRange || "",
+          ageRange: Array.isArray(u.partnerPreferences?.ageRange) ? u.partnerPreferences.ageRange.join("-") : u.partnerPreferences?.ageRange || "",
+          heightRange: Array.isArray(u.partnerPreferences?.heightRange) ? u.partnerPreferences.heightRange.join("-") : u.partnerPreferences?.heightRange || "",
           complexion: u.partnerPreferences?.complexion || "",
           profession: u.partnerPreferences?.profession || "",
           religion: u.partnerPreferences?.religion || "",
           caste: u.partnerPreferences?.caste || "",
           location: u.partnerPreferences?.location || ""
         }
-      }));
+      });
       setPreviewImage(u.image || null);
     } catch (err) {
-      console.error("Error fetching user:", err);
+      console.error(err);
       setMessage("Failed to load user data.");
     } finally {
       setLoading(false);
@@ -141,15 +99,15 @@ const EditProfile = () => {
   useEffect(() => {
     loadUser();
     // eslint-disable-next-line
-  }, [userId]);
+  }, []);
 
   const handleChange = (e) => {
-    const { name, value, type: inputType, checked, files } = e.target;
+    const { name, value, files } = e.target;
 
     if (name === "image" && files && files[0]) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, image: reader.result }));
+        setFormData(prev => ({ ...prev, image: reader.result }));
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(files[0]);
@@ -158,69 +116,53 @@ const EditProfile = () => {
 
     if (name.startsWith("partnerPreferences.")) {
       const key = name.split(".")[1];
-      setFormData((prev) => ({
-        ...prev,
-        partnerPreferences: {
-          ...prev.partnerPreferences,
-          [key]: value
-        }
-      }));
+      setFormData(prev => ({ ...prev, partnerPreferences: { ...prev.partnerPreferences, [key]: value } }));
       return;
     }
 
-    if (inputType === "checkbox") {
-      setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const validateForm = () => {
+    // Check main fields
+    for (let key of [
+      "name","email","age","city","state","country","height","weight",
+      "profession","qualification","company","income","educationDetails",
+      "gender","complexion","bodyType","religion","caste","motherTongue",
+      "maritalStatus","diet","smoking","drinking","hobbies","interests","aboutMe","image"
+    ]) {
+      if (!formData[key] || formData[key].toString().trim() === "") return `${key} is required`;
     }
+
+    // Check partner preferences
+    for (let key of ["ageRange","heightRange","complexion","profession","religion","caste","location"]) {
+      if (!formData.partnerPreferences[key] || formData.partnerPreferences[key].toString().trim() === "") return `${key} is required`;
+    }
+
+    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!userId) {
-      setMessage("Missing user ID.");
+    const validationError = validateForm();
+    if (validationError) {
+      setMessage(`❌ ${validationError}`);
       return;
     }
 
     const payload = {
-      name: formData.name,
-      age: formData.age,
-      city: formData.city,
-      state: formData.state,
-      country: formData.country,
-      height: formData.height,
-      weight: formData.weight,
-      profession: formData.profession,
-      qualification: formData.qualification,
-      company: formData.company,
-      income: formData.income,
-      educationDetails: formData.educationDetails,
-      gender: normalizeEnum(formData.gender),
-      complexion: normalizeEnum(formData.complexion),
-      bodyType: formData.bodyType,
-      religion: formData.religion,
-      caste: formData.caste,
-      motherTongue: formData.motherTongue,
-      maritalStatus: formData.maritalStatus,
-      isDivorced: formData.isDivorced,
-      diet: formData.diet,
-      smoking: formData.smoking,
-      drinking: formData.drinking,
-      hobbies: formData.hobbies
-        .split(",")
-        .map((h) => h.trim())
-        .filter(Boolean),
-      interests: formData.interests
-        .split(",")
-        .map((i) => i.trim())
-        .filter(Boolean),
-      aboutMe: formData.aboutMe,
-      type: formData.type,
-      image: formData.image,
+      ...formData,
+      gender: capitalize(formData.gender),
+      complexion: capitalize(formData.complexion),
+      bodyType: capitalize(formData.bodyType),
+      maritalStatus: capitalize(formData.maritalStatus),
+      diet: capitalize(formData.diet),
+      hobbies: formData.hobbies.split(",").map(h => h.trim()).filter(Boolean),
+      interests: formData.interests.split(",").map(i => i.trim()).filter(Boolean),
       partnerPreferences: {
         ageRange: parseRange(formData.partnerPreferences.ageRange),
         heightRange: parseRange(formData.partnerPreferences.heightRange),
-        complexion: normalizeEnum(formData.partnerPreferences.complexion),
+        complexion: capitalize(formData.partnerPreferences.complexion),
         profession: formData.partnerPreferences.profession,
         religion: formData.partnerPreferences.religion,
         caste: formData.partnerPreferences.caste,
@@ -228,21 +170,17 @@ const EditProfile = () => {
       }
     };
 
-    console.log("Submitting update payload:", payload);
     try {
       setLoading(true);
-      const res = await axios.put(
-        `http://localhost:5000/api/user/${userId}`,
-        payload
-      );
-      console.log("Update response:", res.data);
+      const res = await axios.put(`http://localhost:5000/api/user/${userId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      localStorage.setItem("user", JSON.stringify(res.data));
       setMessage("✅ Profile updated successfully!");
-      // Refresh from backend to ensure sync
-      setTimeout(() => {
-        navigate("/dashboard/profile?t=" + Date.now());
-      }, 500);
+      navigate("/profiles");
     } catch (err) {
-      console.error("Update error:", err);
+      console.error(err);
       const errMsg = err?.response?.data?.message || "Update failed";
       setMessage(`❌ ${errMsg}`);
     } finally {
@@ -253,322 +191,104 @@ const EditProfile = () => {
   return (
     <div className="container mt-4" style={{ maxWidth: 900 }}>
       <h2>Edit Profile</h2>
-
-      {message && (
-        <div
-          style={{
-            padding: "10px",
-            marginBottom: 12,
-            borderRadius: 4,
-            background: message.startsWith("✅") ? "#d1e7dd" : "#f8d7da",
-            color: message.startsWith("✅") ? "#0f5132" : "#842029"
-          }}
-        >
-          {message}
-        </div>
-      )}
-
-      {loading && <div style={{ marginBottom: 8 }}>Loading...</div>}
+      {message && <div style={{
+        padding: "10px",
+        marginBottom: 12,
+        borderRadius: 4,
+        background: message.startsWith("✅") ? "#d1e7dd" : "#f8d7da",
+        color: message.startsWith("✅") ? "#0f5132" : "#842029"
+      }}>{message}</div>}
+      {loading && <div>Loading...</div>}
 
       <form onSubmit={handleSubmit} className="card p-4" noValidate>
-        <div className="row">
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label className="form-label">Name</label>
-              <input name="name" value={formData.name} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Email (read-only)</label>
-              <input name="email" value={formData.email} readOnly className="form-control bg-light" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Age</label>
-              <input
-                type="number"
-                name="age"
-                value={formData.age}
-                min={18}
-                max={100}
-                onChange={handleChange}
-                className="form-control"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">City</label>
-              <input name="city" value={formData.city} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">State</label>
-              <input name="state" value={formData.state} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Country</label>
-              <input name="country" value={formData.country} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Height (cm)</label>
-              <input type="number" name="height" value={formData.height} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Weight</label>
-              <input type="number" name="weight" value={formData.weight} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Profession</label>
-              <input name="profession" value={formData.profession} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Qualification</label>
-              <input name="qualification" value={formData.qualification} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Company</label>
-              <input name="company" value={formData.company} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Income</label>
-              <input name="income" value={formData.income} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Education Details</label>
-              <input name="educationDetails" value={formData.educationDetails} onChange={handleChange} className="form-control" />
-            </div>
-          </div>
-
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label className="form-label">Gender</label>
-              <select name="gender" value={formData.gender} onChange={handleChange} className="form-control">
-                <option value="">Select Gender</option>
-                {genderOptions.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Complexion</label>
-              <select name="complexion" value={formData.complexion} onChange={handleChange} className="form-control">
-                <option value="">Select Complexion</option>
-                {complexionOptions.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Body Type</label>
-              <select name="bodyType" value={formData.bodyType} onChange={handleChange} className="form-control">
-                <option value="">Select Body Type</option>
-                {bodyTypeOptions.map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Religion</label>
-              <input name="religion" value={formData.religion} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Caste</label>
-              <input name="caste" value={formData.caste} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Mother Tongue</label>
-              <input name="motherTongue" value={formData.motherTongue} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Marital Status</label>
-              <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} className="form-control">
-                <option value="">Select</option>
-                {maritalOptions.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-3 form-check">
-              <input type="checkbox" name="isDivorced" checked={formData.isDivorced} onChange={handleChange} className="form-check-input" id="isDivorced" />
-              <label className="form-check-label" htmlFor="isDivorced">Is Divorced</label>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Diet</label>
-              <select name="diet" value={formData.diet} onChange={handleChange} className="form-control">
-                <option value="">Select Diet</option>
-                {dietOptions.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Smoking</label>
-              <select name="smoking" value={formData.smoking} onChange={handleChange} className="form-control">
-                <option value="">Select</option>
-                {yesNoOccasional.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Drinking</label>
-              <select name="drinking" value={formData.drinking} onChange={handleChange} className="form-control">
-                <option value="">Select</option>
-                {yesNoOccasional.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Hobbies</label>
-              <input name="hobbies" value={formData.hobbies} onChange={handleChange} className="form-control" placeholder="reading, music" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Interests</label>
-              <input name="interests" value={formData.interests} onChange={handleChange} className="form-control" placeholder="sports, travel" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">About Me</label>
-              <textarea name="aboutMe" value={formData.aboutMe} onChange={handleChange} className="form-control" rows={3} />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Type</label>
-              <input name="type" value={formData.type} onChange={handleChange} className="form-control" />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Profile Image</label>
-              <input type="file" name="image" accept="image/*" onChange={handleChange} className="form-control" />
-              {previewImage && (
-                <div style={{ marginTop: 8 }}>
-                  <img
-                    src={previewImage}
-                    alt="preview"
-                    style={{
-                      width: 120,
-                      height: 120,
-                      objectFit: "cover",
-                      borderRadius: 8,
-                      border: "1px solid #ccc"
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Name & Email */}
+        <div className="mb-3">
+          <label className="form-label">Name</label>
+          <input type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} required />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Email</label>
+          <input type="email" name="email" className="form-control" value={formData.email} readOnly />
         </div>
 
-        <hr />
-
-        <h5>Partner Preferences</h5>
-        <div className="row">
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label className="form-label">Preferred Age Range</label>
-              <input
-                type="text"
-                name="partnerPreferences.ageRange"
-                value={formData.partnerPreferences.ageRange}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="e.g. 25-35"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Preferred Height Range</label>
-              <input
-                type="text"
-                name="partnerPreferences.heightRange"
-                value={formData.partnerPreferences.heightRange}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="e.g. 160-180"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Preferred Complexion</label>
-              <input
-                type="text"
-                name="partnerPreferences.complexion"
-                value={formData.partnerPreferences.complexion}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="Fair/Wheatish/Dark"
-              />
-            </div>
+        {/* Main Fields */}
+        {[
+          "age","city","state","country","height","weight","profession","qualification",
+          "company","income","educationDetails","gender","religion","caste","motherTongue",
+          "smoking","drinking","hobbies","interests","aboutMe"
+        ].map(key => (
+          <div className="mb-3" key={key}>
+            <label className="form-label">{key.charAt(0).toUpperCase() + key.slice(1)}</label>
+            <input
+              type={["age","height","weight"].includes(key) ? "number" : "text"}
+              name={key}
+              className="form-control"
+              value={formData[key]}
+              onChange={handleChange}
+              required
+            />
           </div>
+        ))}
 
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label className="form-label">Preferred Profession</label>
-              <input
-                type="text"
-                name="partnerPreferences.profession"
-                value={formData.partnerPreferences.profession}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="e.g. Engineer"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Preferred Religion</label>
-              <input
-                type="text"
-                name="partnerPreferences.religion"
-                value={formData.partnerPreferences.religion}
-                onChange={handleChange}
-                className="form-control"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Preferred Caste</label>
-              <input
-                type="text"
-                name="partnerPreferences.caste"
-                value={formData.partnerPreferences.caste}
-                onChange={handleChange}
-                className="form-control"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Preferred Location</label>
-              <input
-                type="text"
-                name="partnerPreferences.location"
-                value={formData.partnerPreferences.location}
-                onChange={handleChange}
-                className="form-control"
-              />
-            </div>
-          </div>
+        {/* Select Dropdowns */}
+        <div className="mb-3">
+          <label className="form-label">Complexion</label>
+          <select className="form-select" name="complexion" value={formData.complexion} onChange={handleChange} required>
+            <option value="">Select Complexion</option>
+            <option value="Fair">Fair</option>
+            <option value="Wheatish">Wheatish</option>
+            <option value="Dusky">Dusky</option>
+            <option value="Dark">Dark</option>
+          </select>
         </div>
+
+        <div className="mb-3">
+          <label className="form-label">Body Type</label>
+          <select className="form-select" name="bodyType" value={formData.bodyType} onChange={handleChange} required>
+            <option value="">Select Body Type</option>
+            <option value="Slim">Slim</option>
+            <option value="Athletic">Athletic</option>
+            <option value="Average">Average</option>
+            <option value="Heavy">Heavy</option>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Marital Status</label>
+          <select className="form-select" name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} required>
+            <option value="">Select Marital Status</option>
+            <option value="Never Married">Single</option>
+            <option value="Divorced">Divorced</option>
+            <option value="Widowed">Widowed</option>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Diet</label>
+          <select className="form-select" name="diet" value={formData.diet} onChange={handleChange} required>
+            <option value="">Select Diet</option>
+            <option value="Vegetarian">Vegetarian</option>
+            <option value="Non-Vegetarian">Non-Vegetarian</option>
+            <option value="Vegan">Vegan</option>
+            <option value="Eggetarian">Eggetarian</option>
+          </select>
+        </div>
+
+        {/* Profile Image */}
+        <div className="mb-3">
+          <label className="form-label">Profile Image</label>
+          <input type="file" name="image" className="form-control" accept="image/*" onChange={handleChange} required />
+          {previewImage && <img src={previewImage} alt="Preview" className="mt-2" style={{ width: "150px", height: "150px", objectFit: "cover" }} />}
+        </div>
+
+        {/* Partner Preferences */}
+        <h5 className="mt-4">Partner Preferences</h5>
+        {Object.keys(formData.partnerPreferences).map(key => (
+          <div className="mb-3" key={key}>
+            <label className="form-label">{key.charAt(0).toUpperCase() + key.slice(1)}</label>
+            <input type="text" name={`partnerPreferences.${key}`} className="form-control" value={formData.partnerPreferences[key]} onChange={handleChange} required />
+          </div>
+        ))}
 
         <button disabled={loading} type="submit" className="btn btn-primary">
           {loading ? "Saving..." : "Save Changes"}

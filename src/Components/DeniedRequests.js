@@ -1,22 +1,33 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Denied = () => {
   const [deniedList, setDeniedList] = useState([]);
-  const userId = localStorage.getItem("userId"); // logged-in user
+  const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/requests/denied/${userId}`);
+        const res = await axios.get(
+          `http://localhost:5000/api/requests/denied/${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setDeniedList(res.data);
       } catch (error) {
         console.error("Error fetching denied interests:", error);
+        if (error.response?.status === 401) {
+          alert("Session expired. Please login again.");
+          localStorage.clear();
+          navigate("/login");
+        }
       }
     };
 
-    fetchData();
-  }, [userId]);
+    if (userId && token) fetchData();
+  }, [userId, token, navigate]);
 
   return (
     <div className="container mt-4">
@@ -26,8 +37,7 @@ const Denied = () => {
       ) : (
         <div className="row">
           {deniedList.map((req) => {
-            const user = req.user; // ✅ comes from backend
-
+            const user = req.user;
             if (!user) return null;
 
             return (
@@ -37,25 +47,16 @@ const Denied = () => {
                     <img
                       src={user.image}
                       alt={user.name}
-                      style={{
-                        width: "100%",
-                        height: "200px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                      }}
+                      style={{ width: "100%", height: "200px", objectFit: "cover", borderRadius: "8px" }}
                     />
                   )}
                   <p><strong>Name:</strong> {user.name}</p>
                   <p><strong>City:</strong> {user.city}</p>
                   <p><strong>Status:</strong> Denied ❌</p>
                   {req.deniedBy === "me" ? (
-                    <p style={{ fontWeight: "bold", color: "red" }}>
-                      You denied this request.
-                    </p>
+                    <p style={{ fontWeight: "bold", color: "red" }}>You denied this request.</p>
                   ) : (
-                    <p style={{ fontWeight: "bold", color: "red" }}>
-                      Your request was denied by this user.
-                    </p>
+                    <p style={{ fontWeight: "bold", color: "red" }}>Your request was denied by this user.</p>
                   )}
                 </div>
               </div>

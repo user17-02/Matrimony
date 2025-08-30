@@ -1,11 +1,11 @@
+import React from "react";
+import { ToastContainer, toast } from "react-toastify";
 import { useForm } from "react-hook-form";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function Login({ setUser }) {
   const navigate = useNavigate();
-  const handleClick = () => navigate('/Signup');
-  
   const {
     register,
     handleSubmit,
@@ -14,34 +14,52 @@ function Login({ setUser }) {
 
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/user/login",
-        {
-          loginInput: data.loginInput,
-          password: data.password,
-        }
-      );
+      const response = await axios.post("http://localhost:5000/api/user/login", {
+        loginInput: data.loginInput,
+        password: data.password,
+      });
 
-      if (response.status === 200) {
-        localStorage.setItem("userId", response.data.user._id);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        localStorage.setItem("token", response.data.token);
-        setUser(response.data.user);
+      const { token, user } = response.data;
 
-        // ✅ Check for mustChange flag sent from backend
-        if (response.data.mustChange) {
-          navigate("/ChangePassword");
-        } else {
-          navigate("/Editprofile");
-        }
+      // ✅ Save JWT, user, and userId
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("userId", user._id);
+
+      setUser(user);
+
+      // ✅ Redirect based on profile completeness
+      if (
+        !user.name || !user.age || !user.height || !user.city || !user.profession ||
+        !user.gender || !user.complexion || !user.bodyType || !user.religion ||
+        !user.caste || !user.motherTongue || !user.maritalStatus ||
+        !user.smoking || !user.drinking || !user.hobbies || !user.interests || !user.aboutMe ||
+        !user.image ||
+        !user.partnerPreferences?.ageRange ||
+        !user.partnerPreferences?.heightRange ||
+        !user.partnerPreferences?.complexion ||
+        !user.partnerPreferences?.profession ||
+        !user.partnerPreferences?.religion ||
+        !user.partnerPreferences?.caste ||
+        !user.partnerPreferences?.location
+      ) {
+        navigate("/editprofile"); // must complete profile first
+      } else {
+        navigate("/profiles"); // profile complete → go to all profiles
       }
     } catch (error) {
-      console.log(error);
-      alert(error.response?.data?.message || "Login failed");
+     toast.error(error.response?.data?.message || "Login failed");
+      console.error(error);
     }
   };
 
-  const handleForgotPassword = () => {
+  const handleClick = (e) => {
+    e.preventDefault();
+    navigate("/signup");
+  };
+
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
     const email = prompt("Enter your registered email:");
     if (email) {
       axios
@@ -52,6 +70,8 @@ function Login({ setUser }) {
   };
 
   return (
+    <>
+    <ToastContainer position="top-right" autoClose={3000} />
     <div className="my-page-wrapper">
       <div className="Login1">
         <h2>Login</h2>
@@ -83,13 +103,15 @@ function Login({ setUser }) {
           </div>
 
           <button type="submit">Login</button>
+
           <div>
-            If you don't have an account?{" "}
-            <a href="" onClick={handleClick}>Register Now</a>
+            Don't have an account?{" "}
+            <a href="#" onClick={handleClick}>Register Now</a>
           </div>
         </form>
       </div>
     </div>
+    </>
   );
 }
 

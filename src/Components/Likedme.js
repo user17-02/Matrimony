@@ -1,29 +1,37 @@
-// src/pages/LikedMe.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 function LikedMe() {
   const [likedByUsers, setLikedByUsers] = useState([]);
-  const currentUserId = localStorage.getItem("userId");
+  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchLikedMe = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/likes/liked-me/${currentUserId}`);
-        const userRes = await axios.get("http://localhost:5000/api/user");
-
-        const likedByProfiles = userRes.data.filter((user) =>
-          data.likedBy.includes(user._id)
+        const { data } = await axios.get(
+          `http://localhost:5000/api/likes/liked-me`, // removed :userId
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // send JWT
+            },
+          }
         );
 
-        setLikedByUsers(likedByProfiles);
+        setLikedByUsers(data);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching liked me:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchLikedMe();
-  }, [currentUserId]);
+    if (token) {
+      fetchLikedMe();
+    }
+  }, [token]);
+
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="container mt-4">

@@ -1,30 +1,43 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function MyProfile() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
-  const userId = localStorage.getItem("userId");
+
+  const storedUser = localStorage.getItem("user");
+  const token = localStorage.getItem("token");
+  const userId = storedUser ? JSON.parse(storedUser)._id : null;
+
+  const fetchProfile = async () => {
+    if (!userId || !token) {
+      setMessage("User not logged in");
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await axios.get(`http://localhost:5000/api/user/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(res.data);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      setMessage("Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!userId) return;
-      try {
-        const res = await axios.get(`http://localhost:5000/api/user/${userId}`, {
-          headers: { "Cache-Control": "no-cache" },
-        });
-        setUser(res.data);
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-      }
-    };
-
     fetchProfile();
-  }, [userId, location.search]); // re-fetch on query changes (cache-busting)
+    // eslint-disable-next-line
+  }, []);
 
-  if (!user) return <div className="container mt-4">Loading your profile...</div>;
+  if (loading) return <div className="container mt-4">Loading...</div>;
+  if (!user) return <div className="container mt-4">{message || "No profile found"}</div>;
 
   const pref = user.partnerPreferences || {};
 
@@ -36,19 +49,13 @@ function MyProfile() {
           <img
             src={user.image}
             alt={user.name || "Profile"}
-            style={{
-              width: "200px",
-              height: "200px",
-              objectFit: "cover",
-              borderRadius: "10px",
-              marginBottom: "15px",
-            }}
+            style={{ width: "200px", height: "200px", objectFit: "cover", borderRadius: "10px", marginBottom: "15px" }}
           />
         )}
+
         <div className="row">
           <div className="col-md-6">
             <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Username:</strong> {user.username}</p>
             <p><strong>Email:</strong> {user.email}</p>
             <p><strong>Age:</strong> {user.age}</p>
             <p><strong>City:</strong> {user.city}</p>
@@ -59,6 +66,8 @@ function MyProfile() {
             <p><strong>Gender:</strong> {user.gender}</p>
             <p><strong>Complexion:</strong> {user.complexion}</p>
             <p><strong>Body Type:</strong> {user.bodyType}</p>
+            <p><strong>Marital Status:</strong> {user.maritalStatus}</p>
+            <p><strong>Diet:</strong> {user.diet}</p>
           </div>
           <div className="col-md-6">
             <p><strong>Profession:</strong> {user.profession}</p>
@@ -69,9 +78,6 @@ function MyProfile() {
             <p><strong>Religion:</strong> {user.religion}</p>
             <p><strong>Caste:</strong> {user.caste}</p>
             <p><strong>Mother Tongue:</strong> {user.motherTongue}</p>
-            <p><strong>Marital Status:</strong> {user.maritalStatus}</p>
-            <p><strong>Is Divorced:</strong> {user.isDivorced ? "Yes" : "No"}</p>
-            <p><strong>Diet:</strong> {user.diet}</p>
             <p><strong>Smoking:</strong> {user.smoking}</p>
             <p><strong>Drinking:</strong> {user.drinking}</p>
             <p><strong>Hobbies:</strong> {Array.isArray(user.hobbies) ? user.hobbies.join(", ") : user.hobbies}</p>
@@ -96,7 +102,7 @@ function MyProfile() {
           </div>
         </div>
 
-        <button className="btn btn-primary mt-3" onClick={() => navigate("/Editprofile?t=" + Date.now())}>
+        <button className="btn btn-primary mt-3" onClick={() => navigate("/editprofile?t=" + Date.now())}>
           Edit Profile
         </button>
       </div>

@@ -1,23 +1,35 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Accepted = () => {
   const [acceptedList, setAcceptedList] = useState([]);
   const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("token"); // JWT token
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAccepted = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/requests/accepted/${userId}`);
+        const res = await axios.get(
+          `http://localhost:5000/api/requests/accepted/${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setAcceptedList(res.data);
       } catch (error) {
         console.error("Error fetching accepted interests:", error);
+        if (error.response?.status === 401) {
+          alert("Session expired. Please login again.");
+          localStorage.clear();
+          navigate("/login");
+        }
       }
     };
 
-    fetchAccepted();
-  }, [userId]);
+    if (userId && token) {
+      fetchAccepted();
+    }
+  }, [userId, token, navigate]);
 
   return (
     <div className="container mt-4">
@@ -28,7 +40,6 @@ const Accepted = () => {
       ) : (
         <div className="row">
           {acceptedList.map((req) => {
-            // Show the "other person"
             const otherUser =
               req.interestFrom?._id === userId ? req.interestTo : req.interestFrom;
 
@@ -39,12 +50,7 @@ const Accepted = () => {
                     <img
                       src={otherUser.image}
                       alt={otherUser.name}
-                      style={{
-                        width: "100%",
-                        height: "400px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                      }}
+                      style={{ width: "100%", height: "400px", objectFit: "cover", borderRadius: "8px" }}
                     />
                   )}
                   <p><strong>Name:</strong> {otherUser?.name}</p>

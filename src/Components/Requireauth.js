@@ -1,9 +1,15 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 
-const RequireAuth = ({ children }) => {
-  const userId = localStorage.getItem("userId");
-  return userId ? children : <Navigate to="/login" replace />;
-};
+function Requireauth({ children }) {
+  const token = localStorage.getItem("token");
 
-export default RequireAuth;
+  if (!token) {
+    // Not logged in, redirect to login
+    return <Navigate to="/login" />;
+  }
+
+  return children;
+}
+
+export default Requireauth;
