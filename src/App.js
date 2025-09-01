@@ -26,6 +26,7 @@ import Likedme from './Components/Likedme';
 import Notifications from './Components/Notifications';
 import SocketInit from './context/SocketInit';
 import { SocketProvider } from './context/SocketContext';
+import MatchingProfiles from './Components/MatchingProfiles';
 
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -95,7 +96,7 @@ function App() {
           <div className="menu">
             <Link to="/">Home</Link>
             <Link to="/profiles">Profiles</Link>
-            <Link to="/Service">Service</Link>
+            <Link to="/matching-profiles">MatchingProfiles</Link>
             <Link to="/dashboard">Dashboard</Link>
             {user ? (
               <>
@@ -124,7 +125,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/Service" element={<Interest />} />
+        <Route path="/matching-profiles" element={<MatchingProfiles />} />
           <Route
             path="/editprofile"
             element={

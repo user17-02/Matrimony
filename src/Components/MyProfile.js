@@ -65,7 +65,7 @@ function MyProfile() {
             <p><strong>Weight:</strong> {user.weight}</p>
             <p><strong>Gender:</strong> {user.gender}</p>
             <p><strong>Complexion:</strong> {user.complexion}</p>
-            <p><strong>Body Type:</strong> {user.bodyType}</p>
+            {/* <p><strong>Body Type:</strong> {user.bodyType}</p> */}
             <p><strong>Marital Status:</strong> {user.maritalStatus}</p>
             <p><strong>Diet:</strong> {user.diet}</p>
           </div>
@@ -78,8 +78,8 @@ function MyProfile() {
             <p><strong>Religion:</strong> {user.religion}</p>
             <p><strong>Caste:</strong> {user.caste}</p>
             <p><strong>Mother Tongue:</strong> {user.motherTongue}</p>
-            <p><strong>Smoking:</strong> {user.smoking}</p>
-            <p><strong>Drinking:</strong> {user.drinking}</p>
+            {/* <p><strong>Smoking:</strong> {user.smoking}</p> */}
+            {/* <p><strong>Drinking:</strong> {user.drinking}</p> */}
             <p><strong>Hobbies:</strong> {Array.isArray(user.hobbies) ? user.hobbies.join(", ") : user.hobbies}</p>
             <p><strong>Interests:</strong> {Array.isArray(user.interests) ? user.interests.join(", ") : user.interests}</p>
             <p><strong>About Me:</strong> {user.aboutMe}</p>

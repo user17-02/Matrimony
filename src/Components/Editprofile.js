@@ -33,14 +33,14 @@ const EditProfile = () => {
     educationDetails: "",
     gender: "",
     complexion: "",
-    bodyType: "",
+    // bodyType: "", // hidden
     religion: "",
     caste: "",
     motherTongue: "",
     maritalStatus: "",
     diet: "",
-    smoking: "",
-    drinking: "",
+    // smoking: "", // hidden
+    // drinking: "", // hidden
     hobbies: "",
     interests: "",
     aboutMe: "",
@@ -124,17 +124,17 @@ const EditProfile = () => {
   };
 
   const validateForm = () => {
-    // Check main fields
+    // Main required fields (hidden fields removed)
     for (let key of [
       "name","email","age","city","state","country","height","weight",
       "profession","qualification","company","income","educationDetails",
-      "gender","complexion","bodyType","religion","caste","motherTongue",
-      "maritalStatus","diet","smoking","drinking","hobbies","interests","aboutMe","image"
+      "gender","complexion","religion","caste","motherTongue",
+      "maritalStatus","diet","hobbies","interests","aboutMe","image"
     ]) {
       if (!formData[key] || formData[key].toString().trim() === "") return `${key} is required`;
     }
 
-    // Check partner preferences
+    // Partner Preferences
     for (let key of ["ageRange","heightRange","complexion","profession","religion","caste","location"]) {
       if (!formData.partnerPreferences[key] || formData.partnerPreferences[key].toString().trim() === "") return `${key} is required`;
     }
@@ -154,7 +154,7 @@ const EditProfile = () => {
       ...formData,
       gender: capitalize(formData.gender),
       complexion: capitalize(formData.complexion),
-      bodyType: capitalize(formData.bodyType),
+      // bodyType: capitalize(formData.bodyType), // hidden
       maritalStatus: capitalize(formData.maritalStatus),
       diet: capitalize(formData.diet),
       hobbies: formData.hobbies.split(",").map(h => h.trim()).filter(Boolean),
@@ -215,7 +215,7 @@ const EditProfile = () => {
         {[
           "age","city","state","country","height","weight","profession","qualification",
           "company","income","educationDetails","gender","religion","caste","motherTongue",
-          "smoking","drinking","hobbies","interests","aboutMe"
+          "hobbies","interests","aboutMe"
         ].map(key => (
           <div className="mb-3" key={key}>
             <label className="form-label">{key.charAt(0).toUpperCase() + key.slice(1)}</label>
@@ -242,7 +242,8 @@ const EditProfile = () => {
           </select>
         </div>
 
-        <div className="mb-3">
+        {/* Body Type hidden */}
+        {/* <div className="mb-3">
           <label className="form-label">Body Type</label>
           <select className="form-select" name="bodyType" value={formData.bodyType} onChange={handleChange} required>
             <option value="">Select Body Type</option>
@@ -251,7 +252,7 @@ const EditProfile = () => {
             <option value="Average">Average</option>
             <option value="Heavy">Heavy</option>
           </select>
-        </div>
+        </div> */}
 
         <div className="mb-3">
           <label className="form-label">Marital Status</label>
@@ -259,7 +260,7 @@ const EditProfile = () => {
             <option value="">Select Marital Status</option>
             <option value="Never Married">Single</option>
             <option value="Divorced">Divorced</option>
-            <option value="Widowed">Widowed</option>
+            {/* <option value="Widowed">Widowed</option> */}
           </select>
         </div>
 

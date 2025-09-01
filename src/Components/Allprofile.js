@@ -50,6 +50,8 @@ function AllProfiles() {
           "http://localhost:5000/api/requests",
           axiosConfig
         );
+
+        // Filter only relevant interests
         const mine = allRequests.filter(
           (r) =>
             r.interestFrom?._id === currentUserId ||
@@ -111,15 +113,42 @@ function AllProfiles() {
     }
   };
 
+  const handleAcceptInterest = async (senderId) => {
+    try {
+      const entry = interests.find(
+        (r) =>
+          (r.interestFrom?._id === senderId || r.interestFrom === senderId) &&
+          (r.interestTo?._id === currentUserId || r.interestTo === currentUserId)
+      );
+      if (!entry) return;
+      const res = await axios.put(
+        `http://localhost:5000/api/requests/${entry._id}`,
+        { status: "accepted" },
+        axiosConfig
+      );
+      setInterests((prev) => prev.map((i) => (i._id === entry._id ? res.data : i)));
+    } catch (err) {
+      console.error("Accept interest error:", err);
+      toast.error("Failed to accept interest.");
+    }
+  };
+
   const getInterestStatus = (userId) => {
-    const entry = interests.find(
+    const sent = interests.find(
       (r) =>
         (r.interestFrom?._id?.toString() === currentUserId && r.interestTo?._id?.toString() === userId) ||
-        (r.interestTo?._id?.toString() === currentUserId && r.interestFrom?._id?.toString() === userId) ||
-        (r.interestFrom === currentUserId && r.interestTo === userId) ||
-        (r.interestTo === currentUserId && r.interestFrom === userId)
+        (r.interestFrom === currentUserId && r.interestTo === userId)
     );
-    return entry?.status || null;
+    if (sent) return sent.status || "pending";
+
+    const received = interests.find(
+      (r) =>
+        (r.interestFrom?._id?.toString() === userId && r.interestTo?._id?.toString() === currentUserId) ||
+        (r.interestFrom === userId && r.interestTo === currentUserId)
+    );
+    if (received) return "received";
+
+    return null;
   };
 
   const handleLikeToggle = async (profileId) => {
@@ -191,17 +220,21 @@ function AllProfiles() {
                   <p><strong>City:</strong> {user.city}</p>
                   <p><strong>Height:</strong> {user.height}</p>
                   <p><strong>Profession:</strong> {user.profession}</p>
-                  {status && <p style={{ color: "green", fontWeight: "bold" }}>Status: {status}</p>}
+                  {status && status !== "received" && <p style={{ color: "green", fontWeight: "bold" }}>Status: {status}</p>}
 
                   <button className="btn btn-info mt-2 me-2" onClick={() => navigate(`/view/${user._id}`)}>View Details</button>
 
-                  <button
-                    className={`btn mt-2 me-2 ${status === "accepted" ? "btn-success" : status === "denied" ? "btn-danger" : status === "pending" ? "btn-secondary" : "btn-outline-primary"}`}
-                    onClick={() => handleSendInterest(user._id)}
-                    disabled={status !== null}
-                  >
-                    {status === "pending" ? "Interest Sent" : status === "accepted" ? "Interest Accepted" : status === "denied" ? "Interest Denied" : "Send Interest"}
-                  </button>
+                  {status === "pending" && (
+                    <button className="btn btn-secondary mt-2 me-2" disabled>Interest Sent</button>
+                  )}
+
+                  {status === "received" && (
+                    <button className="btn btn-primary mt-2 me-2" onClick={() => handleAcceptInterest(user._id)}>Accept Interest</button>
+                  )}
+
+                  {!status && (
+                    <button className="btn btn-outline-primary mt-2 me-2" onClick={() => handleSendInterest(user._id)}>Send Interest</button>
+                  )}
 
                   {status === "accepted" && (
                     <Link to={`/chat/${user._id}`}>
